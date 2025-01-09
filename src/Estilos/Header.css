@@ -1,0 +1,72 @@
+/* src/components/Header.css */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: linear-gradient(145deg, #ffffff, #f0f0f0);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.logo-image {
+  height: 45px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.user-button {
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-button:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  margin-right: 8px;
+}
+
+.user-avatar {
+  background: linear-gradient(45deg, #D94A3D, #FF6B6B) !important;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(217, 74, 61, 0.2);
+}
+
+@media (max-width: 768px) {
+  .header-container {
+    padding: 12px 16px;
+  }
+
+  .user-info {
+    display: none;
+  }
+}
+
+  

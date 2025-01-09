@@ -1,0 +1,33 @@
+.inspecciones {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+
+.inspecciones .data-table {
+    margin-top: 20px;
+}
+
+/* Estilos para los badges de prioridad */
+.priority-badge {
+    text-transform: capitalize;
+    font-weight: 500;
+    min-width: 70px;
+    text-align: center;
+}
+
+.priority-badge[data-color="red"] {
+    background-color: #FFE3E3;
+    color: #D94A3D;
+}
+
+.priority-badge[data-color="yellow"] {
+    background-color: #FFF3DC;
+    color: #B58D3C;
+}
+
+.priority-badge[data-color="green"] {
+    background-color: #E3FCEF;
+    color: #2B9464;
+}
+

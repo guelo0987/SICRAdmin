@@ -1,0 +1,93 @@
+.evaluar-inspeccion {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.evaluar-content {
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 24px 40px;
+}
+
+.content-header {
+  margin-bottom: 32px;
+}
+
+.normativas-section {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.normativa-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.normativa-header {
+  padding: 20px 24px;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.normativa-header:hover {
+  background-color: #f8f9fa;
+}
+
+.normativa-header .mantine-Group-root {
+  color: #2c3e50;
+}
+
+.listas-container {
+  padding: 8px 16px 16px;
+  background: white;
+}
+
+.lista-verificacion-button {
+  width: 100%;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lista-verificacion-button:hover {
+  background-color: #f8f9fa;
+}
+
+.lista-verificacion-button:hover .arrow-icon {
+  transform: translateX(4px);
+  color: #D94A3D;
+}
+
+.lista-content {
+  padding: 16px;
+  color: #2c3e50;
+}
+
+.arrow-icon {
+  transition: all 0.2s ease;
+  color: #adb5bd;
+}
+
+.arrow-icon.rotated {
+  transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+  .evaluar-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .normativa-header {
+    padding: 16px;
+  }
+
+  .lista-content {
+    padding: 12px;
+  }
+} 

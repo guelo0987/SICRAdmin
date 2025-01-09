@@ -1,0 +1,80 @@
+.detalles-solicitud {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.detalles-content {
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 24px 0;
+}
+
+.content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Estilos específicos para los detalles en esta vista */
+.card-details {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.detail-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.detail-item:hover {
+  background-color: #f8f9fa;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.detail-label svg {
+  color: #D94A3D;
+}
+
+.detail-value {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1rem;
+  padding-left: 28px;
+}
+
+@media (max-width: 768px) {
+  .detalles-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .content-wrapper {
+    padding: 0;
+  }
+
+  .card-details {
+    padding: 16px;
+  }
+
+  .detail-item {
+    padding: 12px;
+  }
+
+  .detail-value {
+    padding-left: 24px;
+    font-size: 0.95rem;
+  }
+}

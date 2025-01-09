@@ -1,0 +1,45 @@
+.resultados {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+/* Estilos para la tabla de resultados */
+.resultados .data-table {
+  margin-top: 20px;
+}
+
+/* Estilos para los badges y columnas */
+.codigo-column {
+  color: #D94A3D !important;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.resultado-badge {
+  text-transform: uppercase;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+.resultado-badge[data-color="green"] {
+  background-color: #E3FCEF;
+  color: #2B9464;
+}
+
+.resultado-badge[data-color="red"] {
+  background-color: #FFE3E3;
+  color: #D94A3D;
+}
+
+@media (max-width: 768px) {
+  .resultados-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+}
+
+
+
+
+

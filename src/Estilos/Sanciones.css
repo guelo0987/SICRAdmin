@@ -1,0 +1,46 @@
+.sanciones {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.sanciones-header {
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 0 40px;
+}
+
+/* Estilos para la tabla */
+.sanciones .data-table {
+  margin-top: 20px;
+}
+
+/* Estilos para los badges y columnas */
+.codigo-column {
+  color: #D94A3D !important;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.estado-badge {
+  text-transform: uppercase;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: center;
+}
+
+.action-icon {
+  color: #D94A3D;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-icon:hover {
+  transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+  .sanciones-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+}

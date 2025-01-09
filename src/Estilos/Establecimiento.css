@@ -1,0 +1,19 @@
+.establecimientos {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* Estilos específicos para la tabla de establecimientos */
+.establecimientos .data-table {
+    margin-top: 20px;
+}
+
+.establecimientos .action-icon {
+    color: #D94A3D;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.establecimientos .action-icon:hover {
+    transform: translateX(3px);
+}

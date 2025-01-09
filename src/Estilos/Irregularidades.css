@@ -1,0 +1,34 @@
+.irregularidades {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.irregularidades-content {
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 24px 40px;
+}
+
+.content-header {
+  margin-bottom: 24px;
+}
+
+.info-section {
+  padding: 24px;
+  margin-bottom: 24px;
+  background: white;
+}
+
+.irregularidad-item {
+  padding: 24px;
+  margin-bottom: 16px;
+  background: white;
+  border-left: 4px solid #D94A3D;
+}
+
+@media (max-width: 768px) {
+  .irregularidades-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+} 

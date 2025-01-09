@@ -1,0 +1,141 @@
+.data-table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(217, 74, 61, 0.08);
+  margin: 20px 20px 20px 300px;
+  padding: 24px;
+}
+
+.table-title {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.data-table thead tr {
+  background: rgba(217, 74, 61, 0.05);
+}
+
+.data-table th {
+  text-align: left;
+  padding: 16px;
+  font-weight: 600;
+  color: #D94A3D;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-table td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: #555;
+}
+
+.data-table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(217, 74, 61, 0.02);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Estado de inspección */
+.status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status.aprobado {
+  background: rgba(46, 213, 115, 0.15);
+  color: #2ed573;
+}
+
+.status.pendiente {
+  background: rgba(255, 171, 0, 0.15);
+  color: #ffab00;
+}
+
+.status.rechazado {
+  background: rgba(255, 71, 87, 0.15);
+  color: #ff4757;
+}
+
+@media (max-width: 768px) {
+  .data-table-container {
+    margin: 20px 10px 20px 290px;
+    padding: 16px;
+  }
+
+  .table-title {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Estilos para el botón de asignar inspector */
+.assign-button {
+    background: #D94A3D;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.assign-button:hover {
+    background: #c13426;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(217, 74, 61, 0.2);
+}
+
+.assign-button:active {
+    transform: translateY(0);
+}
+
+/* Icono de acción */
+.action-icon {
+    color: #D94A3D;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.action-icon:hover {
+    transform: translateX(3px);
+}
+
+/* Ajustes específicos para la tabla de solicitudes */
+.solicitudes .data-table td {
+    vertical-align: middle;
+}
+
+.solicitudes .data-table tr:hover .action-icon {
+    transform: translateX(3px);
+}

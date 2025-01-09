@@ -1,0 +1,26 @@
+.editar-usuario {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.usuario-content {
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 24px 40px;
+}
+
+.content-header {
+  margin-bottom: 24px;
+}
+
+.form-section {
+  padding: 24px;
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .usuario-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+} 
