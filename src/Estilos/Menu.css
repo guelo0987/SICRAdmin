@@ -1,14 +1,15 @@
 .menu-container {
-  width: 280px;
-  height: 100vh;
-  background: #fff;
-  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
   position: fixed;
   left: 0;
-  top: 0;
-  z-index: 100;
+  top: 64px;
+  bottom: 0;
+  width: 280px;
+  background: white;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.05);
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .menu-header {
@@ -29,13 +30,18 @@
 }
 
 .menu-item {
+  position: relative;
   display: flex;
   align-items: center;
   padding: 12px 24px;
   color: #666;
   text-decoration: none;
-  transition: all 0.3s ease;
-  gap: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.menu-item > * {
+  z-index: 2;
 }
 
 .menu-item svg {
@@ -94,4 +100,41 @@
 
 .logout-button:hover svg {
   color: #D94A3D;
+}
+
+.submenu {
+  position: relative;
+  z-index: 2;
+  margin-left: 48px;
+  margin-top: 4px;
+}
+
+.submenu-item {
+  display: block;
+  padding: 8px 16px;
+  color: #666;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.submenu-item:hover {
+  color: #D94A3D;
+  background: rgba(217, 74, 61, 0.1);
+  border-radius: 4px;
+}
+
+.submenu-arrow {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+.submenu-arrow.rotated {
+  transform: rotate(90deg);
+}
+
+.menu-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }

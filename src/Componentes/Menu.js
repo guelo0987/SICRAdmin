@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   IconDashboard, 
   IconFileDescription, 
@@ -9,29 +9,57 @@ import {
   IconChartBar,
   IconGavel,
   IconUsers,
-  IconLogout 
+  IconLogout,
+  IconChevronRight
 } from '@tabler/icons-react';
 import '../Estilos/Menu.css';
 
-const MenuItem = ({ icon, text, to }) => {
+const MenuItem = ({ icon, text, to, hasSubmenu, isOpen, onClick, children }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <NavLink to={to} className="menu-item">
+      <div className="menu-item" onClick={onClick}>
         {icon}
         <span>{text}</span>
-      </NavLink>
+        {hasSubmenu && (
+          <IconChevronRight 
+            className={`submenu-arrow ${isOpen ? 'rotated' : ''}`}
+            size={16}
+          />
+        )}
+        {to && <NavLink to={to} className="menu-link" />}
+      </div>
+      {hasSubmenu && isOpen && (
+        <div className="submenu">
+          {children}
+        </div>
+      )}
     </motion.div>
   );
 };
 
 const Menu = () => {
+  const [openSubmenu, setOpenSubmenu] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
   const menuItems = [
     { icon: <IconDashboard />, text: 'Dashboard', to: '/dashboard' },
     { icon: <IconFileDescription />, text: 'Solicitudes', to: '/solicitudes' },
-    { icon: <IconBuilding />, text: 'Establecimientos', to: '/establecimientos' },
+    {
+      icon: <IconBuilding />,
+      text: 'Establecimientos',
+      hasSubmenu: true,
+      submenuItems: [
+        { text: 'Lista de Establecimientos', to: '/establecimientos' },
+        { text: 'Inspecciones Pendientes', to: '/establecimientos/pendientes' }
+      ]
+    },
     { icon: <IconClipboardList />, text: 'Inspecciones', to: '/inspecciones' },
     { icon: <IconChartBar />, text: 'Resultados', to: '/resultados' },
     { icon: <IconGavel />, text: 'Sanciones', to: '/sanciones' },
@@ -54,8 +82,21 @@ const Menu = () => {
             key={index} 
             icon={item.icon} 
             text={item.text} 
-            to={item.to}
-          />
+            to={item.hasSubmenu ? null : item.to}
+            hasSubmenu={item.hasSubmenu}
+            isOpen={item.hasSubmenu && openSubmenu}
+            onClick={item.hasSubmenu ? () => setOpenSubmenu(!openSubmenu) : null}
+          >
+            {item.hasSubmenu && item.submenuItems.map((subItem, subIndex) => (
+              <NavLink 
+                key={subIndex} 
+                to={subItem.to}
+                className="submenu-item"
+              >
+                {subItem.text}
+              </NavLink>
+            ))}
+          </MenuItem>
         ))}
       </div>
 
@@ -69,7 +110,10 @@ const Menu = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <button className="logout-button">
+          <button 
+            className="logout-button"
+            onClick={handleLogout}
+          >
             <IconLogout />
             <span>Cerrar sesión</span>
           </button>
