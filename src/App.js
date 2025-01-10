@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import Dashboard from './Pages/DashBoard';
 import Solicitudes from './Pages/Solicitudes';
@@ -22,6 +22,10 @@ import Usuarios from './Pages/Usuarios';
 import DetallesUsuario from './Pages/DetallesUsuario';
 import EditarUsuario from './Pages/EditarUsuario';
 import AgregarUsuario from './Pages/AgregarUsuario';
+import InspeccionesPendientes from './Pages/InspeccionesPendientes';
+import InspeccionCreada from './Pages/InspeccionCreada';
+import Login from './Pages/Login';
+import MiPerfil from './Pages/MiPerfil';
 
 
 function App() {
@@ -40,6 +44,8 @@ function App() {
         <div className="app">
           <div className="content">
             <Routes>
+              <Route path="/" element={<Navigate to="/login" />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/solicitudes" element={<Solicitudes />} />
               <Route path="/solicitudes/asignar-inspector/:id" element={<AsignarInspector />} />
@@ -61,6 +67,9 @@ function App() {
               <Route path="/usuarios/:id" element={<DetallesUsuario />} />
               <Route path="/usuarios/editar/:id" element={<EditarUsuario />} />
               <Route path="/usuarios/agregar" element={<AgregarUsuario />} />
+              <Route path="/establecimientos/pendientes" element={<InspeccionesPendientes />} />
+              <Route path="/inspecciones/:id/asignar" element={<InspeccionCreada />} />
+              <Route path="/mi-perfil" element={<MiPerfil />} />
             </Routes>
           </div>
         </div>

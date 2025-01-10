@@ -1,0 +1,22 @@
+.inspeccion-creada {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.inspeccion-content {
+    margin-left: 280px;
+    margin-top: 80px;
+    padding: 24px 40px;
+    max-width: 800px;
+}
+
+.info-card {
+    background-color: #fff;
+}
+
+@media (max-width: 768px) {
+    .inspeccion-content {
+        margin-left: 0;
+        padding: 16px;
+    }
+} 

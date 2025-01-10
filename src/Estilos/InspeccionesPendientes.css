@@ -1,0 +1,26 @@
+.inspecciones-pendientes {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+/* Estilos específicos para la tabla de inspecciones pendientes */
+.inspecciones-pendientes .data-table {
+    margin-top: 20px;
+}
+
+.inspecciones-pendientes .action-icon {
+    color: #D94A3D;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.inspecciones-pendientes .action-icon:hover {
+    transform: translateX(3px);
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        margin-left: 0;
+        padding: 16px;
+    }
+} 
