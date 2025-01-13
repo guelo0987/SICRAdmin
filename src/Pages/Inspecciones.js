@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import DataTable from '../Componentes/DataTable';
@@ -7,35 +7,52 @@ import { IconChevronRight } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@mantine/core';
 import '../Estilos/Inspecciones.css';
+import axios from 'axios';
+import { INSPECTION_ENDPOINTS } from '../Api/Endpoints';
 
 function Inspecciones() {
     const navigate = useNavigate();
+    const [inspecciones, setInspecciones] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
 
-    const initialData = [
-        {
-            codigo: 'IN11793',
-            nombre: 'Matadero La Esperanza',
-            fecha: '12/03/2024',
-            prioridad: 'alta'
-        },
-        {
-            codigo: 'INR6322',
-            nombre: 'Planta Procesadora Verde',
-            fecha: '20/12/2024',
-            prioridad: 'media'
-        },
-        {
-            codigo: 'IN87411',
-            nombre: 'Frigorífico Frío Norte',
-            fecha: '25/08/2024',
-            prioridad: 'baja'
+    useEffect(() => {
+        fetchInspecciones();
+    }, []);
+
+    const fetchInspecciones = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(INSPECTION_ENDPOINTS.GET_ALL, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const inspeccionesFormateadas = response.data.map(insp => ({
+                codigo: `IN${insp.idInspeccion}`,
+                nombre: insp.idEstablecimientoNavigation?.nombre || 'Sin nombre',
+                fecha: new Date(insp.fechaInspeccion).toLocaleDateString('es-ES'),
+                prioridad: getPrioridadText(insp.prioridad)
+            }));
+
+            setInspecciones(inspeccionesFormateadas);
+            setFilteredData(inspeccionesFormateadas);
+        } catch (error) {
+            console.error('Error al obtener inspecciones:', error);
         }
-    ];
+    };
 
-    const [filteredData, setFilteredData] = useState(initialData);
+    const getPrioridadText = (prioridad) => {
+        switch(prioridad) {
+            case 1: return 'alta';
+            case 2: return 'media';
+            case 3: return 'baja';
+            default: return 'no definida';
+        }
+    };
 
     const handleSearch = (searchTerm) => {
-        const filtered = initialData.filter(item => 
+        const filtered = inspecciones.filter(item => 
             item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.fecha.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,7 +61,7 @@ function Inspecciones() {
     };
 
     const handleFilterChange = (filters) => {
-        let filtered = [...initialData];
+        let filtered = [...inspecciones];
         
         if (filters.alta || filters.media || filters.baja) {
             filtered = filtered.filter(item => 
@@ -103,7 +120,8 @@ function Inspecciones() {
             render: (value, row) => (
                 <IconChevronRight 
                     className="action-icon" 
-                    onClick={() => navigate(`/inspecciones/${row.codigo}`)}
+                    onClick={() => navigate(`/inspecciones/${row.codigo.substring(2)}`)}
+                    style={{ cursor: 'pointer' }}
                 />
             )
         }

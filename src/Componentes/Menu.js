@@ -57,7 +57,7 @@ const Menu = () => {
       hasSubmenu: true,
       submenuItems: [
         { text: 'Lista de Establecimientos', to: '/establecimientos' },
-        { text: 'Inspecciones Pendientes', to: '/establecimientos/pendientes' }
+        { text: 'Random Establecimiento', to: '/establecimientos/pendientes' }
       ]
     },
     { icon: <IconClipboardList />, text: 'Inspecciones', to: '/inspecciones' },

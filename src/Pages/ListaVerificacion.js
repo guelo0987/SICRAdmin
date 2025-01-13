@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Paper, 
@@ -7,35 +7,81 @@ import {
   Group,
   Title,
   Text,
-  Radio
+  Radio,
+  Loader
 } from '@mantine/core';
 import { 
   IconChevronLeft,
-  IconClipboardCheck
+  IconClipboardCheck,
+  IconClipboardX,
+  IconCheck
 } from '@tabler/icons-react';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/ListaVerificacion.css';
+import axios from 'axios';
+import { ITEMS_VERIFICACION_ENDPOINTS, RESULTADO_ENDPOINTS } from '../Api/Endpoints';
+import { notifications } from '@mantine/notifications';
 
 const ListaVerificacion = () => {
-  const { id } = useParams();
+  const { id, normativaId, listaId } = useParams();
   const navigate = useNavigate();
   const [respuestas, setRespuestas] = useState({});
+  const [observaciones, setObservaciones] = useState({});
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Ejemplo de preguntas (esto vendría de tu API)
-  const preguntas = [
-    {
-      id: 1,
-      pregunta: '¿Las instalaciones están limpias y ordenadas?',
-      observaciones: true
-    },
-    {
-      id: 2,
-      pregunta: '¿Existe un programa de mantenimiento preventivo?',
-      observaciones: true
-    },
-    // ... más preguntas
-  ];
+  useEffect(() => {
+    fetchItems();
+  }, [listaId]);
+
+  const fetchItems = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        ITEMS_VERIFICACION_ENDPOINTS.GET_BY_LISTA(listaId),
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      console.log('Items de la lista:', response.data);
+
+      const itemsFormateados = response.data.map(item => ({
+        id: item.idItem.toString(),
+        pregunta: item.descripcion,
+        numeroItem: item.numeroItem,
+        criterioCumplimiento: item.criterioCumplimiento,
+        observaciones: true
+      }));
+
+      // Ordenar por número de item
+      itemsFormateados.sort((a, b) => a.numeroItem - b.numeroItem);
+
+      setItems(itemsFormateados);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error al obtener items:', error);
+      if (error.response && error.response.status === 404) {
+        notifications.show({
+          title: 'Lista vacía',
+          message: 'Esta lista de verificación no tiene preguntas registradas',
+          color: 'yellow'
+        });
+        setItems([]); // Establecer array vacío para mostrar mensaje en UI
+      } else {
+        notifications.show({
+          title: 'Error',
+          message: 'No se pudieron cargar los items de la lista',
+          color: 'red'
+        });
+      }
+      setLoading(false);
+    }
+  };
 
   const handleRespuesta = (preguntaId, value) => {
     setRespuestas({
@@ -43,6 +89,102 @@ const ListaVerificacion = () => {
       [preguntaId]: value
     });
   };
+
+  const handleObservacion = (itemId, value) => {
+    setObservaciones({
+      ...observaciones,
+      [itemId]: value
+    });
+  };
+
+  const handleGuardarEvaluacion = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+
+      // Guardar cada resultado
+      for (const itemId in respuestas) {
+        const resultado = {
+          idInspeccion: parseInt(id),
+          idLista: parseInt(listaId),
+          idItem: parseInt(itemId),
+          cumple: respuestas[itemId] === 'cumple',
+          observacion: observaciones[itemId] || ''
+        };
+
+        await axios.post(
+          RESULTADO_ENDPOINTS.UPSERT,
+          resultado,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+      }
+
+      notifications.show({
+        title: 'Éxito',
+        message: 'Evaluación guardada correctamente',
+        color: 'green'
+      });
+    } catch (error) {
+      console.error('Error al guardar evaluación:', error);
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data || 'No se pudo guardar la evaluación',
+        color: 'red'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFinalizarInspeccion = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post(
+        RESULTADO_ENDPOINTS.FINALIZAR_INSPECCION(id),
+        { idInspeccion: parseInt(id) },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      notifications.show({
+        title: 'Éxito',
+        message: response.data.Mensaje,
+        color: 'green'
+      });
+
+      navigate('/inspecciones');
+    } catch (error) {
+      console.error('Error al finalizar inspección:', error);
+      notifications.show({
+        title: 'Error',
+        message: error.response?.data || 'No se pudo finalizar la inspección',
+        color: 'red'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="lista-verificacion">
+        <Header />
+        <Menu />
+        <div className="lista-content">
+          <Loader />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="lista-verificacion">
@@ -63,78 +205,104 @@ const ListaVerificacion = () => {
           </Group>
         </div>
 
-        <div className="preguntas-section">
-          <Stack spacing="lg">
-            {preguntas.map((pregunta) => (
-              <Paper key={pregunta.id} p="xl" className="pregunta-item">
-                <Stack spacing="lg">
-                  <Group position="apart" align="flex-start">
-                    <Text size="lg" weight={500} style={{ flex: 1 }}>
-                      {pregunta.pregunta}
-                    </Text>
-                    <div className="radio-group-container">
-                      <Radio.Group
-                        value={respuestas[pregunta.id]}
-                        onChange={(value) => handleRespuesta(pregunta.id, value)}
-                      >
-                        <Group spacing="sm">
-                          <Radio 
-                            value="cumple" 
-                            label="Cumple"
-                            classNames={{
-                              label: 'radio-label',
-                            }}
-                          />
-                          <Radio 
-                            value="no_cumple" 
-                            label="No Cumple"
-                            classNames={{
-                              label: 'radio-label',
-                            }}
-                          />
-                          <Radio 
-                            value="no_aplica" 
-                            label="No Aplica"
-                            classNames={{
-                              label: 'radio-label',
-                            }}
-                          />
-                        </Group>
-                      </Radio.Group>
-                    </div>
-                  </Group>
-                  {pregunta.observaciones && (
-                    <textarea
-                      className="observaciones-input"
-                      placeholder="Ingrese sus observaciones aquí..."
-                      rows={3}
-                    />
-                  )}
-                </Stack>
-              </Paper>
-            ))}
-          </Stack>
+        {!loading && items.length === 0 ? (
+          <Paper p="xl" className="empty-state">
+            <Stack align="center" spacing="md">
+              <IconClipboardX size={48} color="gray" />
+              <Text size="lg" color="dimmed" align="center">
+                Esta lista de verificación no tiene preguntas registradas
+              </Text>
+            </Stack>
+          </Paper>
+        ) : (
+          <div className="preguntas-section">
+            <Stack spacing="lg">
+              {items.map((item) => (
+                <Paper key={item.id} p="xl" className="pregunta-item">
+                  <Stack spacing="lg">
+                    <Group position="apart" align="flex-start">
+                      <Text size="lg" weight={500} style={{ flex: 1 }}>
+                        {item.pregunta}
+                      </Text>
+                      <div className="radio-group-container">
+                        <Radio.Group
+                          value={respuestas[item.id]}
+                          onChange={(value) => handleRespuesta(item.id, value)}
+                        >
+                          <Group spacing="sm">
+                            <Radio 
+                              value="cumple" 
+                              label="Cumple"
+                              classNames={{
+                                label: 'radio-label',
+                              }}
+                            />
+                            <Radio 
+                              value="no_cumple" 
+                              label="No Cumple"
+                              classNames={{
+                                label: 'radio-label',
+                              }}
+                            />
+                            <Radio 
+                              value="no_aplica" 
+                              label="No Aplica"
+                              classNames={{
+                                label: 'radio-label',
+                              }}
+                            />
+                          </Group>
+                        </Radio.Group>
+                      </div>
+                    </Group>
+                    {item.observaciones && (
+                      <textarea
+                        className="observaciones-input"
+                        placeholder="Ingrese sus observaciones aquí..."
+                        rows={3}
+                        value={observaciones[item.id] || ''}
+                        onChange={(e) => handleObservacion(item.id, e.target.value)}
+                      />
+                    )}
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
 
-          <div className="action-buttons">
-            <Group position="right" spacing="md">
-              <Button
-                variant="outline"
-                color="gray"
-                onClick={() => navigate(`/inspecciones/${id}/evaluar`)}
-                size="md"
-              >
-                Cancelar
-              </Button>
-              <Button
-                color="red"
-                leftIcon={<IconClipboardCheck size={16} />}
-                size="md"
-              >
-                Guardar Evaluación
-              </Button>
-            </Group>
+            <div className="action-buttons">
+              <Group position="right" spacing="md">
+                <Button
+                  variant="outline"
+                  color="gray"
+                  onClick={() => navigate(`/inspecciones/${id}/evaluar`)}
+                  size="md"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  color="blue"
+                  leftIcon={<IconClipboardCheck size={16} />}
+                  size="md"
+                  onClick={handleGuardarEvaluacion}
+                  loading={saving}
+                  disabled={saving || Object.keys(respuestas).length === 0}
+                >
+                  {saving ? 'Guardando...' : 'Guardar Evaluación'}
+                </Button>
+                <Button
+                  color="red"
+                  leftIcon={<IconCheck size={16} />}
+                  size="md"
+                  onClick={handleFinalizarInspeccion}
+                  loading={saving}
+                  disabled={saving || Object.keys(respuestas).length === 0}
+                >
+                  Finalizar Inspección
+                </Button>
+              </Group>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
     Group, 
@@ -14,6 +14,27 @@ import Logo from '../Imagenes/LogoSICR.png';
 const Header = () => {
     const navigate = useNavigate();
     const [menuOpened, setMenuOpened] = useState(false);
+    
+    useEffect(() => {
+        const authData = localStorage.getItem('userData');
+        console.log('Datos en localStorage:', authData);
+        if (authData) {
+            const parsedData = JSON.parse(authData);
+            console.log('Datos parseados:', parsedData);
+            console.log('Usuario:', parsedData.user);
+            console.log('Role:', parsedData.role);
+        }
+    }, []);
+
+    // Obtener datos del usuario del localStorage
+    const authData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const user = authData.user || {};
+
+    const handleLogout = () => {
+        localStorage.removeItem('userData');
+        localStorage.removeItem('token');
+        navigate('/login');
+    };
 
     return (
         <header className="header-container">
@@ -41,11 +62,11 @@ const Header = () => {
                                     color="red"
                                     radius="xl"
                                 >
-                                    MR
+                                    {user.nombre?.charAt(0) || 'U'}
                                 </Avatar>
                                 <div className="user-info">
-                                    <Text size="sm" weight={500}>Moni Roy</Text>
-                                    <Text size="xs" color="dimmed">Admin</Text>
+                                    <Text size="sm" weight={500}>{user.nombre || 'Usuario'}</Text>
+                                    <Text size="xs" color="dimmed">{user.rol || 'Sin rol'}</Text>
                                 </div>
                                 <IconChevronDown size={16} />
                             </Group>
@@ -61,7 +82,7 @@ const Header = () => {
                         </Menu.Item>
                         <Menu.Item
                             icon={<IconLogout size={14} />}
-                            onClick={() => navigate('/login')}
+                            onClick={handleLogout}
                             color="red"
                         >
                             Cerrar sesión
@@ -71,7 +92,7 @@ const Header = () => {
             </div>
         </header>
     );
-};
+}
 
 export default Header;
 

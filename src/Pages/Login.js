@@ -6,22 +6,52 @@ import {
     Button,
     Paper,
     Stack,
-    Image
+    Image,
+    Alert,
+    Title
 } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
+import axios from 'axios';
+import { AUTH_ENDPOINTS } from '../Api/Endpoints';
 import '../Estilos/Login.css';
-import LogoSICR from '../Imagenes/LogoSICR.png'; 
+import LogoSICR from '../Imagenes/LogoSICR.png';
 
 const Login = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        email: '',
-        password: ''
+        Mail: '',
+        Password: ''
     });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Aquí iría la lógica de autenticación
-        navigate('/dashboard');
+        setLoading(true);
+        setError('');
+
+        try {
+            console.log('Datos a enviar:', formData);
+
+            const response = await axios.post(AUTH_ENDPOINTS.LOGIN, formData);
+            const data = response.data;
+            console.log('Respuesta del servidor:', data);
+            
+            localStorage.setItem('userData', JSON.stringify(data));
+            localStorage.setItem('token', data.token);
+            
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Error detallado:', error.response?.data);
+            if (error.response?.data?.errors) {
+                const errorMessages = Object.values(error.response.data.errors).flat();
+                setError(errorMessages.join(', '));
+            } else {
+                setError('Error al iniciar sesión. Por favor, verifica tus credenciales.');
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -35,38 +65,44 @@ const Login = () => {
                     />
                 </div>
 
+                {error && (
+                    <Alert 
+                        icon={<IconAlertCircle size={16} />} 
+                        title="Error" 
+                        color="red" 
+                        mb="md"
+                    >
+                        {error}
+                    </Alert>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <Stack spacing="md">
                         <TextInput
-                            label="Correo Eléctronico"
-                            placeholder="Dirección de correo eléctronico"
-                            value={formData.email}
-                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            label="Correo Electrónico"
+                            placeholder="tu@email.com"
+                            value={formData.Mail}
+                            onChange={(e) => setFormData({...formData, Mail: e.target.value})}
                             required
+                            disabled={loading}
                         />
 
                         <PasswordInput
                             label="Contraseña"
                             placeholder="Tu contraseña"
-                            value={formData.password}
-                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            value={formData.Password}
+                            onChange={(e) => setFormData({...formData, Password: e.target.value})}
                             required
+                            disabled={loading}
                         />
 
                         <Button 
                             type="submit" 
                             color="red"
                             fullWidth
-                            styles={{
-                                root: {
-                                    backgroundColor: '#D94A3D',
-                                    '&:hover': {
-                                        backgroundColor: '#bf4236'
-                                    }
-                                }
-                            }}
+                            loading={loading}
                         >
-                            Ingresar
+                            Iniciar Sesión
                         </Button>
                     </Stack>
                 </form>

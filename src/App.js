@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 import Dashboard from './Pages/DashBoard';
 import Solicitudes from './Pages/Solicitudes';
 import AsignarInspector from './Pages/AsignarInspector';
@@ -40,6 +41,7 @@ function App() {
       withGlobalStyles
       withNormalizeCSS
     >
+      <Notifications />
       <BrowserRouter>
         <div className="app">
           <div className="content">

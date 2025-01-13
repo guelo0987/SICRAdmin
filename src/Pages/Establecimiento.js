@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import DataTable from '../Componentes/DataTable';
@@ -6,35 +6,54 @@ import SearchBar from '../Componentes/SearchBar';
 import { IconChevronRight } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import '../Estilos/Establecimiento.css';
+import axios from 'axios';
+import { ESTABLISHMENT_ENDPOINTS } from '../Api/Endpoints';
+import { notifications } from '@mantine/notifications';
+import { Loader } from '@mantine/core';
 
 function Establecimiento() {
     const navigate = useNavigate();
+    const [establecimientos, setEstablecimientos] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const initialData = [
-        {
-            codigo: 'E111793',
-            nombre: 'Matadero La Esperanza',
-            tipo: 'Matadero',
-            operacion: 'Sacrificio'
-        },
-        {
-            codigo: 'E596322',
-            nombre: 'Planta Procesadora Verde',
-            tipo: 'Planta Procesadora',
-            operacion: 'Procesamiento'
-        },
-        {
-            codigo: 'E587411',
-            nombre: 'Frigorífico Frío Norte',
-            tipo: 'Frigorífico',
-            operacion: 'Almacenamiento'
+    useEffect(() => {
+        fetchEstablecimientos();
+    }, []);
+
+    const fetchEstablecimientos = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(ESTABLISHMENT_ENDPOINTS.GET_ALL, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const establecimientosFormateados = response.data.map(est => ({
+                codigo: `E${est.idEstablecimiento}`,
+                nombre: est.nombre,
+                tipo: est.tipoOperacion || 'No especificado',
+                operacion: est.estadoEstablecimiento || 'No especificado',
+                riesgo: est.riesgo || 'Pendiente'
+            }));
+
+            setEstablecimientos(establecimientosFormateados);
+            setFilteredData(establecimientosFormateados);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error al obtener establecimientos:', error);
+            notifications.show({
+                title: 'Error',
+                message: 'No se pudieron cargar los establecimientos',
+                color: 'red'
+            });
+            setLoading(false);
         }
-    ];
-
-    const [filteredData, setFilteredData] = useState(initialData);
+    };
 
     const handleSearch = (searchTerm) => {
-        const filtered = initialData.filter(item => 
+        const filtered = establecimientos.filter(item => 
             item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
             item.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,13 +63,13 @@ function Establecimiento() {
     };
 
     const handleFilterChange = (filters) => {
-        let filtered = [...initialData];
+        let filtered = [...establecimientos];
         
-        if (filters.sacrificio || filters.procesamiento || filters.almacenamiento) {
+        if (filters.activo || filters.inactivo || filters.pendiente) {
             filtered = filtered.filter(item => 
-                (filters.sacrificio && item.operacion === 'Sacrificio') ||
-                (filters.procesamiento && item.operacion === 'Procesamiento') ||
-                (filters.almacenamiento && item.operacion === 'Almacenamiento')
+                (filters.activo && item.operacion === 'Activo') ||
+                (filters.inactivo && item.operacion === 'Inactivo') ||
+                (filters.pendiente && item.operacion === 'Pendiente')
             );
         }
 
@@ -59,20 +78,24 @@ function Establecimiento() {
 
     const columns = [
         { 
-            header: 'Código de Establecimiento', 
+            header: 'Código', 
             key: 'codigo' 
         },
         { 
-            header: 'Nombre del Establecimiento', 
+            header: 'Nombre', 
             key: 'nombre' 
         },
         { 
-            header: 'Tipo de Establecimiento', 
+            header: 'Tipo de Operación', 
             key: 'tipo' 
         },
         { 
-            header: 'Tipo de Operación', 
+            header: 'Estado', 
             key: 'operacion' 
+        },
+        { 
+            header: 'Riesgo', 
+            key: 'riesgo' 
         },
         {
             header: '',
@@ -80,25 +103,40 @@ function Establecimiento() {
             render: (value, row) => (
                 <IconChevronRight 
                     className="action-icon" 
-                    onClick={() => navigate(`/establecimientos/${row.codigo}`)}
+                    onClick={() => {
+                        const idEstablecimiento = row.codigo.replace('E', '');
+                        navigate(`/establecimientos/${idEstablecimiento}`);
+                    }}
                 />
             )
         }
     ];
+
+    if (loading) {
+        return (
+            <div className="establecimientos">
+                <Header />
+                <Menu />
+                <div className="content-wrapper">
+                    <Loader size="lg" variant="dots" />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="establecimientos">
             <Header />
             <Menu />
             <SearchBar 
-                placeholder="Search"
+                placeholder="Buscar establecimiento"
                 onSearch={handleSearch}
                 onFilterChange={handleFilterChange}
-                filterPlaceholder="Tipo de Operación"
+                filterPlaceholder="Estado"
                 filterOptions={[
-                    { value: 'sacrificio', label: 'Sacrificio' },
-                    { value: 'procesamiento', label: 'Procesamiento' },
-                    { value: 'almacenamiento', label: 'Almacenamiento' }
+                    { value: 'activo', label: 'Activo' },
+                    { value: 'inactivo', label: 'Inactivo' },
+                    { value: 'pendiente', label: 'Pendiente' }
                 ]}
             />
             <DataTable 

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button } from '@mantine/core';
+import { Button, Loader } from '@mantine/core';
 import { 
   IconBuilding, 
   IconMapPin, 
@@ -14,63 +14,106 @@ import CardDetails from '../Componentes/CardDetails';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/DetalleEstablecimientos.css';
+import axios from 'axios';
+import { ESTABLISHMENT_ENDPOINTS } from '../Api/Endpoints';
+import { notifications } from '@mantine/notifications';
 
 const DetallesEstablecimientos = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [establecimiento, setEstablecimiento] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const establecimientoDetails = [
+  useEffect(() => {
+    fetchEstablecimientoDetails();
+  }, [id]);
+
+  const fetchEstablecimientoDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(ESTABLISHMENT_ENDPOINTS.GET_BY_ID(id), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setEstablecimiento(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error al obtener detalles del establecimiento:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudieron cargar los detalles del establecimiento',
+        color: 'red'
+      });
+      setLoading(false);
+    }
+  };
+
+  const establecimientoDetails = establecimiento ? [
     {
       label: "Código de Establecimiento",
-      value: id,
+      value: `E${establecimiento.idEstablecimiento}`,
       icon: <IconClipboardList size={16} />
     },
     {
       label: "Nombre del Establecimiento",
-      value: "Matadero La Esperanza",
+      value: establecimiento.nombre,
       icon: <IconBuilding size={16} />
     },
     {
       label: "Dirección",
-      value: "Calle Ficticia 123, Ciudad",
+      value: establecimiento.direccion,
       icon: <IconMapPin size={16} />
-    },
-    {
-      label: "Coordenadas del Establecimiento",
-      value: "40° 24' 59\" N, 03° 42' 09\" O",
-      icon: <IconMapPin size={16} />
-    },
-    {
-      label: "Tipo de Establecimiento",
-      value: "Matadero",
-      icon: <IconBuilding size={16} />
     },
     {
       label: "Tipo de Operación",
-      value: "Sacrificio",
+      value: establecimiento.tipoOperacion || 'No especificado',
       icon: <IconBox size={16} />
     },
     {
       label: "Tipo de Producto",
-      value: "Producto A",
+      value: establecimiento.tipoProducto || 'No especificado',
       icon: <IconBox size={16} />
     },
     {
       label: "Volumen Procesado",
-      value: "Volumen A",
+      value: establecimiento.volumenProcesado || 'No especificado',
       icon: <IconChartBar size={16} />
     },
     {
-      label: "Volumen de Unidad",
-      value: "Volumen A",
+      label: "Unidad de Volumen",
+      value: establecimiento.unidadVolumen || 'No especificado',
       icon: <IconChartBar size={16} />
     },
     {
       label: "Periodo de Volumen",
-      value: "Periodo 3",
+      value: establecimiento.periodoVolumen || 'No especificado',
       icon: <IconCalendar size={16} />
+    },
+    {
+      label: "Estado",
+      value: establecimiento.estadoEstablecimiento,
+      icon: <IconBuilding size={16} />
+    },
+    {
+      label: "Riesgo",
+      value: establecimiento.riesgo || 'Pendiente',
+      icon: <IconBox size={16} />
     }
-  ];
+  ] : [];
+
+  if (loading) {
+    return (
+      <div className="detalles-establecimiento">
+        <Header />
+        <Menu />
+        <div className="content-wrapper">
+          <Loader size="lg" variant="dots" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="detalles-establecimiento">
@@ -103,7 +146,7 @@ const DetallesEstablecimientos = () => {
               details={[
                 {
                   label: "Documento",
-                  value: "No hay documentos cargados",
+                  value: establecimiento?.licenciasCertificaciones || "No hay documentos cargados",
                   icon: <IconClipboardList size={16} />
                 }
               ]}

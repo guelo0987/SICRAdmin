@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Paper, Text } from '@mantine/core';
 import { 
@@ -14,61 +14,132 @@ import CardDetails from '../Componentes/CardDetails';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/DetallesInspeccion.css';
+import axios from 'axios';
+import { INSPECTION_ENDPOINTS, USER_ENDPOINTS } from '../Api/Endpoints';
+import { notifications } from '@mantine/notifications';
 
 const DetallesInspeccion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [inspeccion, setInspeccion] = useState(null);
+  const [inspector, setInspector] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const inspeccionDetails = [
+  useEffect(() => {
+    fetchInspeccionDetails();
+  }, [id]);
+
+  const fetchInspectorDetails = async (inspectorId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        USER_ENDPOINTS.GET_BY_ID(inspectorId),
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      setInspector(response.data);
+    } catch (error) {
+      console.error('Error al obtener detalles del inspector:', error);
+    }
+  };
+
+  const fetchInspeccionDetails = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        INSPECTION_ENDPOINTS.GET_BY_ID(id),
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      setInspeccion(response.data);
+      if (response.data.idAdminInspector) {
+        await fetchInspectorDetails(response.data.idAdminInspector);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error al obtener detalles de la inspección:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudieron cargar los detalles de la inspección',
+        color: 'red'
+      });
+      setLoading(false);
+    }
+  };
+
+  const getPrioridadText = (prioridad) => {
+    switch(prioridad) {
+      case 1: return 'Alta';
+      case 2: return 'Media';
+      case 3: return 'Baja';
+      default: return 'No definida';
+    }
+  };
+
+  const inspeccionDetails = inspeccion ? [
     {
       label: "Código de Inspección",
-      value: id,
+      value: `IN${inspeccion.idInspeccion}`,
       icon: <IconClipboardList size={16} />
     },
     {
       label: "Nombre del Establecimiento",
-      value: "Matadero La Esperanza",
+      value: inspeccion.idEstablecimientoNavigation?.nombre || 'Sin nombre',
       icon: <IconBuilding size={16} />
     },
     {
       label: "Dirección",
-      value: "Calle Ficticia 123, Ciudad",
+      value: inspeccion.idEstablecimientoNavigation?.direccion || 'Sin dirección',
       icon: <IconMapPin size={16} />
     },
     {
       label: "Coordenadas del Establecimiento",
-      value: "40° 24' 59\" N, 03° 42' 09\" O",
+      value: inspeccion.idEstablecimientoNavigation?.coordenadas || 'Sin coordenadas',
       icon: <IconMapPin size={16} />
     },
     {
       label: "Tipo de Establecimiento",
-      value: "Matadero",
+      value: inspeccion.idEstablecimientoNavigation?.tipoOperacion || 'No especificado',
       icon: <IconBuilding size={16} />
     },
     {
       label: "Fecha de solicitud",
-      value: "11/02/2024",
+      value: inspeccion.fechaCreacion ? new Date(inspeccion.fechaCreacion).toLocaleDateString('es-ES') : 'No disponible',
       icon: <IconCalendar size={16} />
     },
     {
       label: "Prioridad",
-      value: "Alta",
+      value: getPrioridadText(inspeccion.prioridad),
       icon: <IconAlertTriangle size={16} />
     },
     {
       label: "Inspector Asignado",
-      value: "Juan Polo",
+      value: inspector ? inspector.nombre : 'Sin asignar',
       icon: <IconUser size={16} />
     },
     {
       label: "Fecha de Inspección",
-      value: "15/12/2024",
+      value: new Date(inspeccion.fechaInspeccion).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       icon: <IconCalendar size={16} />
     }
-  ];
+  ] : [];
 
-  // Simulación de estado de resultados (esto vendría de tu backend)
-  const tieneResultados = false;
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="detalles-inspeccion">
@@ -103,9 +174,10 @@ const DetallesInspeccion = () => {
                 <h2>Resultados de Inspección</h2>
               </div>
               
-              {tieneResultados ? (
+              {inspeccion?.resultado ? (
                 <div className="resultados-content">
-                  {/* Aquí irían los resultados de la inspección */}
+                  {/* Aquí mostrarías los resultados de la inspección */}
+                  <Text>Resultado: {inspeccion.resultado}</Text>
                 </div>
               ) : (
                 <div className="no-resultados">
