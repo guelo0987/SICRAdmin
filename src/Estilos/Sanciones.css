@@ -44,3 +44,17 @@
     padding: 16px;
   }
 }
+
+.descripcion-column {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monto-badge {
+  font-family: monospace;
+  font-size: 1.1em;
+  min-width: 100px;
+  text-align: right;
+}

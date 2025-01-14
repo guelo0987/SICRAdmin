@@ -1,41 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
+import axios from 'axios';
+import { INSPECTION_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import DataTable from '../Componentes/DataTable';
 import SearchBar from '../Componentes/SearchBar';
 import '../Estilos/Resultados.css';
+import { notifications } from '@mantine/notifications';
 
 const Resultados = () => {
   const navigate = useNavigate();
+  const [inspecciones, setInspecciones] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
 
-  const initialData = [
-    {
-      codigo: 'IN11793',
-      nombre: 'Matadero La Esperanza',
-      fecha: '12/03/2024',
-      resultado: 'aprobado'
-    },
-    {
-      codigo: 'INR6322',
-      nombre: 'Planta Procesadora Verde',
-      fecha: '20/12/2024',
-      resultado: 'denegado'
-    },
-    {
-      codigo: 'IN87411',
-      nombre: 'Frigorífico Frío Norte',
-      fecha: '25/08/2024',
-      resultado: 'aprobado'
+  useEffect(() => {
+    fetchInspeccionesEvaluadas();
+  }, []);
+
+  const fetchInspeccionesEvaluadas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(INSPECTION_ENDPOINTS.GET_ALL, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('Respuesta original:', response.data);
+
+      // Filtrar solo las inspecciones evaluadas
+      const inspeccionesEvaluadas = response.data
+        .filter(insp => insp.fueEvaluada === true && insp.resultadosInspeccions?.length > 0)
+        .map(insp => {
+          // Tomamos el primer resultado de la inspección
+          const primerResultado = insp.resultadosInspeccions[0];
+          return {
+            idInspeccion: insp.idInspeccion,
+            idResultado: primerResultado.idResultado,
+            codigo: `IN${insp.idInspeccion}`,
+            nombre: insp.idEstablecimientoNavigation?.nombre || 'Sin nombre',
+            fecha: new Date(insp.fechaInspeccion).toLocaleDateString('es-ES'),
+            resultado: insp.resultado
+          };
+        });
+
+      console.log('Inspecciones evaluadas:', inspeccionesEvaluadas);
+      setInspecciones(inspeccionesEvaluadas);
+      setFilteredData(inspeccionesEvaluadas);
+    } catch (error) {
+      console.error('Error al obtener inspecciones:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudieron cargar las inspecciones evaluadas',
+        color: 'red'
+      });
     }
-  ];
-
-  const [filteredData, setFilteredData] = useState(initialData);
+  };
 
   const handleSearch = (searchTerm) => {
-    const filtered = initialData.filter(item => 
+    const filtered = inspecciones.filter(item => 
       item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.fecha.toLowerCase().includes(searchTerm.toLowerCase())
@@ -44,7 +70,7 @@ const Resultados = () => {
   };
 
   const handleFilterChange = (filters) => {
-    let filtered = [...initialData];
+    let filtered = [...inspecciones];
     
     if (filters.aprobado || filters.denegado) {
       filtered = filtered.filter(item => 
@@ -58,18 +84,19 @@ const Resultados = () => {
 
   const getResultadoBadge = (resultado) => {
     const config = {
-      aprobado: { color: 'green', label: 'APROBADO' },
-      denegado: { color: 'red', label: 'DENEGADO' }
+      'Cumple': { color: 'green', label: 'CUMPLE' },
+      'No Cumple': { color: 'red', label: 'NO CUMPLE' },
+      'En Revision': { color: 'yellow', label: 'EN REVISIÓN' }
     };
 
     return (
       <Badge 
-        color={config[resultado].color}
+        color={config[resultado]?.color || 'gray'}
         variant="light"
         size="sm"
         className="resultado-badge"
       >
-        {config[resultado].label}
+        {config[resultado]?.label || resultado}
       </Badge>
     );
   };
@@ -102,7 +129,8 @@ const Resultados = () => {
       render: (value, row) => (
         <IconChevronRight 
           className="action-icon" 
-          onClick={() => navigate(`/resultados/${row.codigo}`)}
+          onClick={() => navigate(`/resultados/${row.idResultado}`)}
+          style={{ cursor: 'pointer' }}
         />
       )
     }

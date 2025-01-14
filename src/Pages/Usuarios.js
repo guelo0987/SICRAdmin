@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Group, ActionIcon } from '@mantine/core';
+import { Button, Group, ActionIcon, Badge } from '@mantine/core';
 import { IconPlus, IconEdit, IconChevronRight } from '@tabler/icons-react';
+import axios from 'axios';
+import { notifications } from '@mantine/notifications';
+import { USER_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import DataTable from '../Componentes/DataTable';
@@ -10,47 +13,70 @@ import '../Estilos/Usuarios.css';
 
 const Usuarios = () => {
   const navigate = useNavigate();
-  
-  const initialData = [
-    {
-      nombres: 'Juan Marcos',
-      apellidos: 'Pérez Ajpop',
-      rol: 'Inspector',
-      correo: 'juan.perez@email.com'
-    },
-    {
-      nombres: 'Carlos Emanuel',
-      apellidos: 'García Cuello',
-      rol: 'Administrador',
-      correo: 'carlos.garcia@email.com'
-    },
-    {
-      nombres: 'Jessie Melisa',
-      apellidos: 'López Mejía',
-      rol: 'Inspector',
-      correo: 'melisa.lopez@email.com'
-    }
-  ];
+  const [usuarios, setUsuarios] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [filteredData, setFilteredData] = useState(initialData);
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(USER_ENDPOINTS.GET_ALL, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const usuariosFormateados = response.data.map(usuario => ({
+          id: usuario.idAdmin,
+          nombres: usuario.nombre,
+          apellidos: usuario.apellidos || 'No especificado',
+          rol: usuario.rol,
+          correo: usuario.email,
+          telefono: usuario.telefono,
+          username: usuario.username,
+          direccion: usuario.direccion || 'No especificada',
+          fechaIngreso: new Date(usuario.fechaIngreso).toLocaleDateString('es-ES'),
+          fechaNacimiento: usuario.fechaNacimiento ? 
+            new Date(usuario.fechaNacimiento).toLocaleDateString('es-ES') : 
+            'No especificada'
+        }));
+
+        setUsuarios(usuariosFormateados);
+        setFilteredData(usuariosFormateados);
+      } catch (error) {
+        console.error('Error al obtener usuarios:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'No se pudieron cargar los usuarios',
+          color: 'red'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsuarios();
+  }, []);
 
   const handleSearch = (searchTerm) => {
-    const filtered = initialData.filter(item => 
-      item.nombres.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.rol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.correo.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = usuarios.filter(item => 
+      item.nombres?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.apellidos?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.rol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.correo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.username?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredData(filtered);
   };
 
   const handleFilterChange = (filters) => {
-    let filtered = [...initialData];
+    let filtered = [...usuarios];
     
-    if (filters.inspector || filters.administrador) {
+    if (filters.admin || filters.empleado) {
       filtered = filtered.filter(item => 
-        (filters.inspector && item.rol === 'Inspector') ||
-        (filters.administrador && item.rol === 'Administrador')
+        (filters.admin && item.rol === 'Admin') ||
+        (filters.empleado && item.rol === 'Empleado')
       );
     }
 
@@ -58,6 +84,10 @@ const Usuarios = () => {
   };
 
   const columns = [
+    { 
+      header: 'Usuario',
+      key: 'username'
+    },
     { 
       header: 'Nombres',
       key: 'nombres'
@@ -68,11 +98,23 @@ const Usuarios = () => {
     },
     {
       header: 'Rol',
-      key: 'rol'
+      key: 'rol',
+      render: (value) => (
+        <Badge 
+          color={value === 'Admin' ? 'blue' : 'green'}
+          variant="light"
+        >
+          {value}
+        </Badge>
+      )
     },
     {
-      header: 'Correo Electrónico',
+      header: 'Correo',
       key: 'correo'
+    },
+    {
+      header: 'Teléfono',
+      key: 'telefono'
     },
     {
       header: '',
@@ -81,13 +123,13 @@ const Usuarios = () => {
         <Group spacing={4}>
           <ActionIcon
             color="red"
-            onClick={() => navigate(`/usuarios/editar/${row.correo}`)}
+            onClick={() => navigate(`/usuarios/editar/${row.id}`)}
           >
             <IconEdit size={18} />
           </ActionIcon>
           <IconChevronRight 
             className="action-icon" 
-            onClick={() => navigate(`/usuarios/${row.correo}`)}
+            onClick={() => navigate(`/usuarios/${row.id}`)}
           />
         </Group>
       )
@@ -108,19 +150,20 @@ const Usuarios = () => {
         </Button>
       </div>
       <SearchBar 
-        placeholder="Buscar por nombre, apellido, rol o correo"
+        placeholder="Buscar por nombre, usuario, rol o correo"
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
         filterPlaceholder="Rol"
         filterOptions={[
-          { value: 'inspector', label: 'Inspector' },
-          { value: 'administrador', label: 'Administrador' }
+          { value: 'admin', label: 'Admin' },
+          { value: 'empleado', label: 'Empleado' }
         ]}
       />
       <DataTable 
         title="Gestión de Usuarios"
         columns={columns}
         data={filteredData}
+        loading={loading}
       />
     </div>
   );

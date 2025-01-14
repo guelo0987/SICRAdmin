@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Button, 
@@ -6,30 +6,105 @@ import {
   Text, 
   Group,
   Stack,
-  Table
+  Table,
+  Badge,
+  Loader
 } from '@mantine/core';
-import { IconChevronLeft } from '@tabler/icons-react';
+import { IconChevronLeft, IconCash, IconCalendar, IconAlertTriangle } from '@tabler/icons-react';
+import axios from 'axios';
+import { notifications } from '@mantine/notifications';
+import { SANCION_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/DetallesSanciones.css';
 
 const DetallesSanciones = () => {
-  // eslint-disable-next-line no-unused-vars
   const { id } = useParams();
   const navigate = useNavigate();
+  const [sancion, setSancion] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [actualizandoEstado, setActualizandoEstado] = useState(false);
 
-  // Datos de ejemplo (esto vendría de tu API)
-  const sancionData = {
-    id: id,
-    establecimiento: 'Matadero La Esperanza',
-    codigo: 'E11773',
-    fecha: '12/09/2024',
-    inspector: 'Juan Pérez',
-    irregularidad: 'Temperatura de la sala de sacrificio no controlada adecuadamente.',
-    tipoSancion: 'Multa económica por incumplimiento de normas sanitarias',
-    monto: '$500',
-    estado: 'Aprobada'
+  useEffect(() => {
+    const fetchSancionDetails = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${SANCION_ENDPOINTS.GET_ALL}/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setSancion(response.data);
+      } catch (error) {
+        console.error('Error al obtener detalles de la sanción:', error);
+        notifications.show({
+          title: 'Error',
+          message: 'No se pudieron cargar los detalles de la sanción',
+          color: 'red'
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSancionDetails();
+  }, [id]);
+
+  const handleCambiarEstado = async (idIrregularidad, nuevoEstado) => {
+    setActualizandoEstado(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        SANCION_ENDPOINTS.CAMBIAR_ESTADO(idIrregularidad, sancion.idSancion),
+        JSON.stringify(nuevoEstado),
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      notifications.show({
+        title: 'Éxito',
+        message: 'Estado de la sanción actualizado correctamente',
+        color: 'green'
+      });
+
+      // Actualizar los datos localmente
+      const sancionActualizada = {
+        ...sancion,
+        irregularidadesRelacionadas: sancion.irregularidadesRelacionadas.map(irreg =>
+          irreg.idIrregularidad === idIrregularidad
+            ? {
+                ...irreg,
+                estadoSancion: nuevoEstado,
+                fechaResolution: nuevoEstado === 'Resuelto' ? new Date().toISOString() : null
+              }
+            : irreg
+        )
+      };
+      setSancion(sancionActualizada);
+
+    } catch (error) {
+      console.error('Error al cambiar el estado:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudo actualizar el estado de la sanción',
+        color: 'red'
+      });
+    } finally {
+      setActualizandoEstado(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="detalles-sanciones loading">
+        <Loader size="xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="detalles-sanciones">
@@ -46,61 +121,90 @@ const DetallesSanciones = () => {
             >
               Volver
             </Button>
-            <Text size="xl" weight={600}>Detalles de Sanciones</Text>
+            <Text size="xl" weight={600}>Detalles de la Sanción</Text>
           </Group>
         </div>
 
         <Paper shadow="sm" radius="md" className="info-section">
           <Stack spacing="lg">
             <div>
-              <Text size="lg" weight={600} mb="md">Información del Establecimiento</Text>
+              <Text size="lg" weight={600} mb="md">Información de la Sanción</Text>
               <Table>
                 <tbody>
                   <tr>
-                    <td><Text weight={500}>Establecimiento:</Text></td>
-                    <td>{sancionData.establecimiento}</td>
+                    <td><Text weight={500}>Código:</Text></td>
+                    <td>S{sancion?.idSancion}</td>
                   </tr>
                   <tr>
-                    <td><Text weight={500}>Código de Establecimiento:</Text></td>
-                    <td>{sancionData.codigo}</td>
-                  </tr>
-                  <tr>
-                    <td><Text weight={500}>Fecha de Inspección:</Text></td>
-                    <td>{sancionData.fecha}</td>
-                  </tr>
-                  <tr>
-                    <td><Text weight={500}>Inspector:</Text></td>
-                    <td>{sancionData.inspector}</td>
-                  </tr>
-                </tbody>
-              </Table>
-            </div>
-
-            <div>
-              <Text size="lg" weight={600} mb="md">Irregularidad Detectada</Text>
-              <Paper p="md" radius="md" className="irregularidad-box">
-                <Text>{sancionData.irregularidad}</Text>
-              </Paper>
-            </div>
-
-            <div>
-              <Text size="lg" weight={600} mb="md">Detalles de la Sanción</Text>
-              <Table>
-                <tbody>
-                  <tr>
-                    <td><Text weight={500}>Tipo de Sanción:</Text></td>
-                    <td>{sancionData.tipoSancion}</td>
+                    <td><Text weight={500}>Descripción:</Text></td>
+                    <td>{sancion?.descripcion}</td>
                   </tr>
                   <tr>
                     <td><Text weight={500}>Monto:</Text></td>
-                    <td>{sancionData.monto}</td>
-                  </tr>
-                  <tr>
-                    <td><Text weight={500}>Estado de la Sanción:</Text></td>
-                    <td>{sancionData.estado}</td>
+                    <td>
+                      <Badge color="blue" size="lg">
+                        S/. {sancion?.monto.toFixed(2)}
+                      </Badge>
+                    </td>
                   </tr>
                 </tbody>
               </Table>
+            </div>
+
+            <div>
+              <Text size="lg" weight={600} mb="md">Irregularidades Relacionadas</Text>
+              {sancion?.irregularidadesRelacionadas?.length > 0 ? (
+                <Table>
+                  <thead>
+                    <tr>
+                      <th>ID Irregularidad</th>
+                      <th>Fecha Aplicada</th>
+                      <th>Fecha Resolución</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sancion.irregularidadesRelacionadas.map((irreg) => (
+                      <tr key={irreg.idIrregularidad}>
+                        <td>#{irreg.idIrregularidad}</td>
+                        <td>{new Date(irreg.fechaAplicada).toLocaleDateString('es-ES')}</td>
+                        <td>
+                          {irreg.fechaResolution ? 
+                            new Date(irreg.fechaResolution).toLocaleDateString('es-ES') : 
+                            'Pendiente'}
+                        </td>
+                        <td>
+                          <Badge 
+                            color={irreg.estadoSancion === 'Pendiente' ? 'yellow' : 'green'}
+                            variant="light"
+                          >
+                            {irreg.estadoSancion}
+                          </Badge>
+                        </td>
+                        <td>
+                          <Group spacing="xs">
+                            <Button
+                              size="xs"
+                              variant="light"
+                              color={irreg.estadoSancion === 'Pendiente' ? 'green' : 'yellow'}
+                              onClick={() => handleCambiarEstado(
+                                irreg.idIrregularidad, 
+                                irreg.estadoSancion === 'Pendiente' ? 'Resuelto' : 'Pendiente'
+                              )}
+                              loading={actualizandoEstado}
+                            >
+                              {irreg.estadoSancion === 'Pendiente' ? 'Marcar Resuelto' : 'Marcar Pendiente'}
+                            </Button>
+                          </Group>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              ) : (
+                <Text color="dimmed">No hay irregularidades relacionadas</Text>
+              )}
             </div>
           </Stack>
         </Paper>

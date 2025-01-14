@@ -56,17 +56,26 @@ export const RESULTADO_ENDPOINTS = {
     GET_BY_ID: (id) => `${API_URL}/api/Resultado/${id}`,
     UPSERT: `${API_URL}/api/Resultado`,
     FINALIZAR_INSPECCION: (id) => `${API_URL}/api/Resultado/FinalizarInspeccionSolicitud?idInspeccion=${id}`,
-  };
+    FINALIZAR_INSPECCION_ALEATORIA: (id) => `${API_URL}/api/Resultado/FinalizarInspeccionAleatoria?idInspeccion=${id}`,
+    GENERAR_IRREGULARIDADES: (idInspeccion) => `${API_URL}/api/Resultado/GenerarIrregularidades?idInspeccion=${idInspeccion}`
+};
 
 // Endpoints de Irregularidades
 export const IRREGULARIDAD_ENDPOINTS = {
+    BASE: `${API_URL}/api/Resultado`,
     EDITAR: `${API_URL}/api/Irregularidad/EditarIrregularidad`,
+    VERIFICAR_IRREGULARIDADES_INSPECCION: (idInspeccion) => 
+        `${API_URL}/api/Irregularidad/TieneIrregularidadesInspeccion?idInspeccion=${idInspeccion}`,
+    GET_POR_INSPECCION: (idInspeccion) => 
+        `${API_URL}/api/Irregularidad/PorInspeccion/${idInspeccion}`
 };
 
 // Endpoints de Sanciones
 export const SANCION_ENDPOINTS = {
     GET_ALL: `${API_URL}/api/Sancione`,
     APLICAR_SANCION: `${API_URL}/api/Sancione/AplicarSancioneIrregularidad`,
+    CAMBIAR_ESTADO: (idIrregularidad, idSancion) => 
+        `${API_URL}/api/Sancione/CambiarEstado/${idIrregularidad}/${idSancion}`,
 };
 
 // Endpoints de Animales y Lotes
@@ -90,6 +99,8 @@ export const LOTE_PRODUCTO_ENDPOINTS = {
     GET_BY_ID: (id) => `${API_URL}/api/LoteProducto/${id}`,
     UPSERT: `${API_URL}/api/LoteProducto`,
     DELETE: (id) => `${API_URL}/api/LoteProducto/${id}`,
+    GET_BY_ESTABLISHMENT: (idEstablecimiento) => 
+        `${API_URL}/api/LoteProducto/LotesPorEstablecimiento/${idEstablecimiento}`,
 };
 
 // Endpoints de Documentos

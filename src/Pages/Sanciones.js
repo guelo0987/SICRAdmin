@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge, Button } from '@mantine/core';
 import { IconChevronRight, IconPlus } from '@tabler/icons-react';
+import axios from 'axios';
+import { SANCION_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import DataTable from '../Componentes/DataTable';
@@ -10,100 +12,69 @@ import '../Estilos/Sanciones.css';
 
 const Sanciones = () => {
   const navigate = useNavigate();
+  const [sanciones, setSanciones] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
 
-  const initialData = [
-    {
-      codigo: 'E111793',
-      nombre: 'Matadero La Esperanza',
-      fecha: '12/09/2024',
-      inspector: 'Juan Polo',
-      estado: 'Pendiente'
-    },
-    {
-      codigo: 'E596322',
-      nombre: 'Planta Procesadora Verde',
-      fecha: '20/12/2024',
-      inspector: 'Juan Polo',
-      estado: 'Pendiente'
-    },
-    {
-      codigo: 'E587411',
-      nombre: 'Frigorífico Frío Norte',
-      fecha: '25/08/2024',
-      inspector: 'Juan Polo',
-      estado: 'Pendiente'
-    }
-  ];
+  useEffect(() => {
+    const fetchSanciones = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(SANCION_ENDPOINTS.GET_ALL, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
-  const [filteredData, setFilteredData] = useState(initialData);
+        const sancionesFormateadas = response.data.map(sancion => ({
+          id: sancion.idSancion,
+          codigo: `S${sancion.idSancion}`,
+          descripcion: sancion.descripcion,
+          monto: sancion.monto.toFixed(2),
+          irregularidades: sancion.sancionIrregularidads.length
+        }));
 
-  const handleSearch = (searchTerm) => {
-    const filtered = initialData.filter(item => 
-      item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.fecha.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.inspector.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredData(filtered);
-  };
-
-  const handleFilterChange = (filters) => {
-    let filtered = [...initialData];
-    
-    if (filters.pendiente || filters.procesado || filters.archivado) {
-      filtered = filtered.filter(item => 
-        (filters.pendiente && item.estado === 'Pendiente') ||
-        (filters.procesado && item.estado === 'Procesado') ||
-        (filters.archivado && item.estado === 'Archivado')
-      );
-    }
-
-    setFilteredData(filtered);
-  };
-
-  const getEstadoBadge = (estado) => {
-    const config = {
-      'Pendiente': { color: 'yellow', label: 'PENDIENTE' },
-      'Procesado': { color: 'green', label: 'PROCESADO' },
-      'Archivado': { color: 'gray', label: 'ARCHIVADO' }
+        setSanciones(sancionesFormateadas);
+        setFilteredData(sancionesFormateadas);
+      } catch (error) {
+        console.error('Error al obtener sanciones:', error);
+      }
     };
 
-    return (
-      <Badge 
-        color={config[estado].color}
-        variant="light"
-        size="sm"
-        className="estado-badge"
-      >
-        {config[estado].label}
-      </Badge>
+    fetchSanciones();
+  }, []);
+
+  const handleSearch = (searchTerm) => {
+    const filtered = sanciones.filter(item => 
+      item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.monto.toString().includes(searchTerm)
     );
+    setFilteredData(filtered);
   };
 
   const columns = [
     { 
-      header: 'Código de Establecimiento',
+      header: 'Código',
       key: 'codigo',
       className: 'codigo-column'
     },
     { 
-      header: 'Nombre del Establecimiento',
-      key: 'nombre',
-      className: 'nombre-column'
+      header: 'Descripción',
+      key: 'descripcion',
+      className: 'descripcion-column'
     },
     { 
-      header: 'Fecha Inspección',
-      key: 'fecha',
-      className: 'fecha-column'
-    },
-    {
-      header: 'Inspector',
-      key: 'inspector'
-    },
-    {
-      header: 'Estado',
-      key: 'estado',
-      render: (value) => getEstadoBadge(value)
+      header: 'Monto (S/.)',
+      key: 'monto',
+      render: (value) => (
+        <Badge 
+          color="blue" 
+          variant="light"
+          size="lg"
+        >
+          S/. {value}
+        </Badge>
+      )
     },
     {
       header: '',
@@ -111,7 +82,7 @@ const Sanciones = () => {
       render: (value, row) => (
         <IconChevronRight 
           className="action-icon" 
-          onClick={() => navigate(`/sanciones/${row.codigo}`)}
+          onClick={() => navigate(`/sanciones/${row.id}`)}
         />
       )
     }
@@ -131,14 +102,8 @@ const Sanciones = () => {
         </Button>
       </div>
       <SearchBar 
-        placeholder="Search"
+        placeholder="Buscar por código, descripción o monto"
         onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        filterPlaceholder="Estado"
-        filterOptions={[
-          { value: 'pendiente', label: 'Pendiente' },
-          { value: 'procesado', label: 'Procesado' }
-        ]}
       />
       <DataTable 
         title="Sanciones"

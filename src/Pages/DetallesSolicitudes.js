@@ -455,7 +455,6 @@ const DetallesSolicitudes = () => {
             >
               Volver
             </Button>
-            <Text size="xl" weight={600}>Detalles de Solicitud</Text>
           </Group>
 
           <Stack spacing="lg">

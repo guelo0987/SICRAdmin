@@ -28,11 +28,15 @@ function Inspecciones() {
                 }
             });
 
+            console.log('Inspecciones:', response.data);
+
             const inspeccionesFormateadas = response.data.map(insp => ({
                 codigo: `IN${insp.idInspeccion}`,
-                nombre: insp.idEstablecimientoNavigation?.nombre || 'Sin nombre',
+                nombre: insp.idEstablecimientoNavigation?.nombre || insp.idSolicitudNavigation?.nombreEst || 'Sin nombre',
                 fecha: new Date(insp.fechaInspeccion).toLocaleDateString('es-ES'),
-                prioridad: getPrioridadText(insp.prioridad)
+                prioridad: getPrioridadText(insp.prioridad),
+                tipo: insp.idSolicitud ? 'Solicitud' : 'Aleatoria',
+                resultado: insp.resultado || 'En Revisión'
             }));
 
             setInspecciones(inspeccionesFormateadas);
@@ -63,11 +67,20 @@ function Inspecciones() {
     const handleFilterChange = (filters) => {
         let filtered = [...inspecciones];
         
+        // Filtrar por prioridad
         if (filters.alta || filters.media || filters.baja) {
             filtered = filtered.filter(item => 
                 (filters.alta && item.prioridad === 'alta') ||
                 (filters.media && item.prioridad === 'media') ||
                 (filters.baja && item.prioridad === 'baja')
+            );
+        }
+
+        // Filtrar por tipo de inspección
+        if (filters.aleatoria || filters.solicitud) {
+            filtered = filtered.filter(item => 
+                (filters.aleatoria && item.tipo === 'Aleatoria') ||
+                (filters.solicitud && item.tipo === 'Solicitud')
             );
         }
 
@@ -87,6 +100,19 @@ function Inspecciones() {
         }
     };
 
+    const getResultadoColor = (resultado) => {
+        switch (resultado.toLowerCase()) {
+            case 'cumple':
+                return 'green';
+            case 'no cumple':
+                return 'red';
+            case 'en revisión':
+                return 'yellow';
+            default:
+                return 'gray';
+        }
+    };
+
     const columns = [
         { 
             header: 'Código de Inspección', 
@@ -101,6 +127,19 @@ function Inspecciones() {
             key: 'fecha' 
         },
         {
+            header: 'Tipo',
+            key: 'tipo',
+            render: (value) => (
+                <Badge 
+                    color={value === 'Aleatoria' ? 'blue' : 'violet'}
+                    variant="light"
+                    size="sm"
+                >
+                    {value}
+                </Badge>
+            )
+        },
+        {
             header: 'Prioridad',
             key: 'prioridad',
             render: (value) => (
@@ -111,6 +150,19 @@ function Inspecciones() {
                     className="priority-badge"
                 >
                     {value.charAt(0).toUpperCase() + value.slice(1)}
+                </Badge>
+            )
+        },
+        {
+            header: 'Estado',
+            key: 'resultado',
+            render: (value) => (
+                <Badge 
+                    color={getResultadoColor(value)}
+                    variant="light"
+                    size="sm"
+                >
+                    {value}
                 </Badge>
             )
         },
@@ -136,11 +188,12 @@ function Inspecciones() {
                     placeholder="Buscar por código, nombre o fecha"
                     onSearch={handleSearch}
                     onFilterChange={handleFilterChange}
-                    filterPlaceholder="Prioridad"
                     filterOptions={[
-                        { value: 'alta', label: 'Alta' },
-                        { value: 'media', label: 'Media' },
-                        { value: 'baja', label: 'Baja' }
+                        { value: 'alta', label: 'Prioridad Alta', group: 'Prioridad' },
+                        { value: 'media', label: 'Prioridad Media', group: 'Prioridad' },
+                        { value: 'baja', label: 'Prioridad Baja', group: 'Prioridad' },
+                        { value: 'aleatoria', label: 'Aleatorias', group: 'Tipo' },
+                        { value: 'solicitud', label: 'Por Solicitud', group: 'Tipo' }
                     ]}
                 />
                 <DataTable 

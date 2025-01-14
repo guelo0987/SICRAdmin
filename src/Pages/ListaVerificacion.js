@@ -13,8 +13,7 @@ import {
 import { 
   IconChevronLeft,
   IconClipboardCheck,
-  IconClipboardX,
-  IconCheck
+  IconClipboardX
 } from '@tabler/icons-react';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
@@ -140,40 +139,6 @@ const ListaVerificacion = () => {
     }
   };
 
-  const handleFinalizarInspeccion = async () => {
-    try {
-      setSaving(true);
-      const token = localStorage.getItem('token');
-
-      const response = await axios.post(
-        RESULTADO_ENDPOINTS.FINALIZAR_INSPECCION(id),
-        { idInspeccion: parseInt(id) },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      notifications.show({
-        title: 'Éxito',
-        message: response.data.Mensaje,
-        color: 'green'
-      });
-
-      navigate('/inspecciones');
-    } catch (error) {
-      console.error('Error al finalizar inspección:', error);
-      notifications.show({
-        title: 'Error',
-        message: error.response?.data || 'No se pudo finalizar la inspección',
-        color: 'red'
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="lista-verificacion">
@@ -288,16 +253,6 @@ const ListaVerificacion = () => {
                   disabled={saving || Object.keys(respuestas).length === 0}
                 >
                   {saving ? 'Guardando...' : 'Guardar Evaluación'}
-                </Button>
-                <Button
-                  color="red"
-                  leftIcon={<IconCheck size={16} />}
-                  size="md"
-                  onClick={handleFinalizarInspeccion}
-                  loading={saving}
-                  disabled={saving || Object.keys(respuestas).length === 0}
-                >
-                  Finalizar Inspección
                 </Button>
               </Group>
             </div>
