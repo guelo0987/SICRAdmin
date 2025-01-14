@@ -37,13 +37,19 @@ const Resultados = () => {
         .map(insp => {
           // Tomamos el primer resultado de la inspección
           const primerResultado = insp.resultadosInspeccions[0];
+          // Calcular el puntaje basado en los resultados
+          const totalItems = insp.resultadosInspeccions.length;
+          const itemsCumplidos = insp.resultadosInspeccions.filter(r => r.cumple).length;
+          const puntaje = Math.round((itemsCumplidos / totalItems) * 100);
+
           return {
             idInspeccion: insp.idInspeccion,
             idResultado: primerResultado.idResultado,
             codigo: `IN${insp.idInspeccion}`,
             nombre: insp.idEstablecimientoNavigation?.nombre || 'Sin nombre',
             fecha: new Date(insp.fechaInspeccion).toLocaleDateString('es-ES'),
-            resultado: insp.resultado
+            resultado: insp.resultado,
+            puntaje: puntaje
           };
         });
 
@@ -116,6 +122,20 @@ const Resultados = () => {
       header: 'FECHA INSPECCIÓN',
       key: 'fecha',
       className: 'fecha-column'
+    },
+    {
+      header: 'PUNTAJE',
+      key: 'puntaje',
+      className: 'puntaje-column',
+      render: (value) => (
+        <Badge 
+          color={value >= 70 ? 'green' : value >= 50 ? 'yellow' : 'red'}
+          variant="light"
+          size="sm"
+        >
+          {value}%
+        </Badge>
+      )
     },
     {
       header: 'RESULTADO',

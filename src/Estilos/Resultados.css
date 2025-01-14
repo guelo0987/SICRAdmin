@@ -39,6 +39,16 @@
   }
 }
 
+.puntaje-column {
+  text-align: center;
+  min-width: 100px;
+}
+
+.puntaje-column .mantine-Badge-root {
+  width: 70px;
+  font-family: monospace;
+}
+
 
 
 
