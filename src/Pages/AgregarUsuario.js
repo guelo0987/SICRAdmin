@@ -8,46 +8,35 @@ import {
   Stack,
   TextInput,
   Select,
-  Checkbox,
   PasswordInput
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { IconChevronLeft } from '@tabler/icons-react';
+import axios from 'axios';
+import { notifications } from '@mantine/notifications';
+import { USER_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/AgregarUsuario.css';
 
 const AgregarUsuario = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
   const [formData, setFormData] = useState({
-    nombres: '',
-    apellidos: '',
-    correo: '',
-    telefono: '',
-    direccion: '',
-    fechaNacimiento: '',
-    fechaIngreso: '',
+    username: '',
     password: '',
     confirmarPassword: '',
     rol: '',
-    permisos: {
-      asignarInspecciones: false,
-      gestionarUsuarios: false,
-      gestionarSanciones: false,
-      gestionarSolicitudes: false
-    }
+    email: '',
+    direccion: '',
+    nombre: '',
+    apellidos: '',
+    telefono: '',
+    fechaNacimiento: null,
+    fechaIngreso: null
   });
-
-  const handlePermisosChange = (permiso) => {
-    setFormData({
-      ...formData,
-      permisos: {
-        ...formData.permisos,
-        [permiso]: !formData.permisos[permiso]
-      }
-    });
-  };
 
   const validatePasswords = () => {
     if (formData.password !== formData.confirmarPassword) {
@@ -58,13 +47,54 @@ const AgregarUsuario = () => {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!validatePasswords()) {
-      return; // Detiene el envío si las contraseñas no coinciden
+      return;
     }
-    // Aquí iría la validación y el envío a la API
-    console.log('Nuevo usuario:', formData);
-    navigate('/usuarios');
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const dataToSend = {
+        adminId: 0,
+        username: formData.username,
+        password: formData.password,
+        nombre: formData.nombre,
+        email: formData.email,
+        rol: formData.rol,
+        telefono: formData.telefono || '',
+        direccion: formData.direccion || '',
+        apellidos: formData.apellidos || '',
+        fechaNacimiento: formData.fechaNacimiento ? 
+          new Date(formData.fechaNacimiento).toISOString() : null,
+        fechaIngreso: formData.fechaIngreso ? 
+          new Date(formData.fechaIngreso).toISOString() : null
+      };
+
+      await axios.post(USER_ENDPOINTS.CREATE_UPDATE, dataToSend, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      notifications.show({
+        title: 'Éxito',
+        message: 'Usuario creado correctamente',
+        color: 'green'
+      });
+      navigate('/usuarios');
+    } catch (error) {
+      console.error('Error al crear usuario:', error);
+      const errorMessage = error.response?.data || 'No se pudo crear el usuario';
+      notifications.show({
+        title: 'Error',
+        message: errorMessage,
+        color: 'red'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,153 +116,88 @@ const AgregarUsuario = () => {
           </Group>
         </div>
 
-        <Paper shadow="sm" radius="md" className="form-section">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}>
-            <Stack spacing="lg">
-              <div>
-                <Text size="lg" weight={600} mb="md">Información Personal</Text>
-                <Stack spacing="md">
-                  <TextInput
-                    label="Nombres"
-                    placeholder="Ingrese los nombres"
-                    value={formData.nombres}
-                    onChange={(e) => setFormData({...formData, nombres: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Apellidos"
-                    placeholder="Ingrese los apellidos"
-                    value={formData.apellidos}
-                    onChange={(e) => setFormData({...formData, apellidos: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Correo Electrónico"
-                    placeholder="ejemplo@email.com"
-                    type="email"
-                    value={formData.correo}
-                    onChange={(e) => setFormData({...formData, correo: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Teléfono"
-                    placeholder="Ingrese el teléfono"
-                    value={formData.telefono}
-                    onChange={(e) => setFormData({...formData, telefono: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Dirección"
-                    placeholder="Ingrese la dirección"
-                    value={formData.direccion}
-                    onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Fecha de Nacimiento"
-                    type="date"
-                    value={formData.fechaNacimiento}
-                    onChange={(e) => setFormData({...formData, fechaNacimiento: e.target.value})}
-                    required
-                  />
-                  <TextInput
-                    label="Fecha de Ingreso"
-                    type="date"
-                    value={formData.fechaIngreso}
-                    onChange={(e) => setFormData({...formData, fechaIngreso: e.target.value})}
-                    required
-                  />
-                </Stack>
-              </div>
-
-              <div>
-                <Text size="lg" weight={600} mb="md">Credenciales</Text>
-                <Stack spacing="md">
-                  <PasswordInput
-                    label="Contraseña"
-                    placeholder="Ingrese la contraseña"
-                    value={formData.password}
-                    onChange={(e) => {
-                      setFormData({...formData, password: e.target.value});
-                      if (passwordError) validatePasswords();
-                    }}
-                    required
-                    error={passwordError}
-                  />
-                  <PasswordInput
-                    label="Confirmar Contraseña"
-                    placeholder="Confirme la contraseña"
-                    value={formData.confirmarPassword}
-                    onChange={(e) => {
-                      setFormData({...formData, confirmarPassword: e.target.value});
-                      if (passwordError) validatePasswords();
-                    }}
-                    required
-                    error={passwordError}
-                  />
-                </Stack>
-              </div>
-
-              <div>
-                <Text size="lg" weight={600} mb="md">Rol y Permisos</Text>
-                <Stack spacing="md">
-                  <Select
-                    label="Rol Asignado"
-                    placeholder="Seleccione un rol"
-                    value={formData.rol}
-                    onChange={(value) => setFormData({...formData, rol: value})}
-                    data={[
-                      { value: 'inspector', label: 'Inspector' },
-                      { value: 'administrador', label: 'Administrador' }
-                    ]}
-                    required
-                  />
-                  <div>
-                    <Text weight={500} size="sm" mb="xs">Permisos Asignados</Text>
-                    <Stack spacing="xs">
-                      <Checkbox
-                        label="Asignar Inspecciones"
-                        checked={formData.permisos.asignarInspecciones}
-                        onChange={() => handlePermisosChange('asignarInspecciones')}
-                      />
-                      <Checkbox
-                        label="Gestionar Usuarios"
-                        checked={formData.permisos.gestionarUsuarios}
-                        onChange={() => handlePermisosChange('gestionarUsuarios')}
-                      />
-                      <Checkbox
-                        label="Gestionar Sanciones"
-                        checked={formData.permisos.gestionarSanciones}
-                        onChange={() => handlePermisosChange('gestionarSanciones')}
-                      />
-                      <Checkbox
-                        label="Gestionar Solicitudes"
-                        checked={formData.permisos.gestionarSolicitudes}
-                        onChange={() => handlePermisosChange('gestionarSolicitudes')}
-                      />
-                    </Stack>
-                  </div>
-                </Stack>
-              </div>
-
-              <Group position="right" mt="xl">
-                <Button
-                  variant="outline"
-                  color="gray"
-                  onClick={() => navigate('/usuarios')}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  color="red"
-                >
-                  Guardar
-                </Button>
-              </Group>
+        <Paper shadow="sm" radius="md" p="xl">
+          <form onSubmit={handleSubmit}>
+            <Stack spacing="md">
+              <TextInput
+                label="Nombre de Usuario"
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                required
+              />
+              <PasswordInput
+                label="Contraseña"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                required
+                error={passwordError}
+              />
+              <PasswordInput
+                label="Confirmar Contraseña"
+                value={formData.confirmarPassword}
+                onChange={(e) => setFormData({...formData, confirmarPassword: e.target.value})}
+                required
+                error={passwordError}
+              />
+              <TextInput
+                label="Nombre"
+                value={formData.nombre}
+                onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                required
+              />
+              <TextInput
+                label="Apellidos"
+                value={formData.apellidos}
+                onChange={(e) => setFormData({...formData, apellidos: e.target.value})}
+              />
+              <Select
+                label="Rol"
+                value={formData.rol}
+                onChange={(value) => setFormData({...formData, rol: value})}
+                data={[
+                  { value: 'Admin', label: 'Administrador' },
+                  { value: 'Empleado', label: 'Empleado' }
+                ]}
+                required
+              />
+              <TextInput
+                label="Correo Electrónico"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+              />
+              <TextInput
+                label="Teléfono"
+                value={formData.telefono}
+                onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+              />
+              <TextInput
+                label="Dirección"
+                value={formData.direccion}
+                onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+              />
+              <DateInput
+                label="Fecha de Nacimiento"
+                placeholder="Seleccione una fecha"
+                value={formData.fechaNacimiento}
+                onChange={(value) => setFormData({...formData, fechaNacimiento: value})}
+                clearable
+              />
+              <DateInput
+                label="Fecha de Ingreso"
+                placeholder="Seleccione una fecha"
+                value={formData.fechaIngreso}
+                onChange={(value) => setFormData({...formData, fechaIngreso: value})}
+                clearable
+              />
+              <Button 
+                type="submit" 
+                loading={loading}
+                color="red"
+              >
+                Crear Usuario
+              </Button>
             </Stack>
           </form>
         </Paper>

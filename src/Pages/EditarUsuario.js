@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   Button, 
@@ -7,10 +7,13 @@ import {
   Group,
   Stack,
   TextInput,
-  Select,
-  Checkbox
+  Select
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { IconChevronLeft } from '@tabler/icons-react';
+import axios from 'axios';
+import { notifications } from '@mantine/notifications';
+import { USER_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/EditarUsuario.css';
@@ -18,33 +21,95 @@ import '../Estilos/EditarUsuario.css';
 const EditarUsuario = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    nombres: 'Juan Marcos',
-    apellidos: 'Martinez Brito',
-    correo: 'juan.perez@email.com',
-    rol: 'Inspector',
-    permisos: {
-      asignarInspecciones: false,
-      gestionarUsuarios: false,
-      gestionarSanciones: false,
-      gestionarSolicitudes: false
-    }
+    idAdmin: '',
+    username: '',
+    password: '',
+    rol: '',
+    email: '',
+    direccion: '',
+    nombre: '',
+    apellidos: '',
+    telefono: '',
+    fechaNacimiento: null,
+    fechaIngreso: null,
+    estado: ''
   });
 
-  const handlePermisosChange = (permiso) => {
-    setFormData({
-      ...formData,
-      permisos: {
-        ...formData.permisos,
-        [permiso]: !formData.permisos[permiso]
-      }
-    });
-  };
+  useEffect(() => {
+    if (id) {
+      const fetchUsuario = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const response = await axios.get(USER_ENDPOINTS.GET_BY_ID(id), {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          setFormData({
+            ...response.data,
+            idAdmin: response.data.idAdmin,
+            fechaNacimiento: response.data.fechaNacimiento ? new Date(response.data.fechaNacimiento) : null,
+            fechaIngreso: response.data.fechaIngreso ? new Date(response.data.fechaIngreso) : null
+          });
+        } catch (error) {
+          console.error('Error al obtener usuario:', error);
+          notifications.show({
+            title: 'Error',
+            message: 'No se pudo cargar la información del usuario',
+            color: 'red'
+          });
+        }
+      };
+      fetchUsuario();
+    }
+  }, [id]);
 
-  const handleSubmit = () => {
-    console.log('Datos actualizados:', formData);
-    navigate('/usuarios');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const dataToSend = {
+        adminId: id ? parseInt(id) : 0,
+        username: formData.username,
+        nombre: formData.nombre,
+        email: formData.email,
+        password: formData.password || '',
+        rol: formData.rol,
+        telefono: formData.telefono || '',
+        direccion: formData.direccion || '',
+        fechaNacimiento: formData.fechaNacimiento ? 
+          new Date(formData.fechaNacimiento).toISOString() : null,
+        fechaIngreso: formData.fechaIngreso ? 
+          new Date(formData.fechaIngreso).toISOString() : null
+      };
+
+      const response = await axios.post(USER_ENDPOINTS.CREATE_UPDATE, dataToSend, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      notifications.show({
+        title: 'Éxito',
+        message: id ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente',
+        color: 'green'
+      });
+      navigate('/usuarios');
+    } catch (error) {
+      console.error('Error al actualizar usuario:', error);
+      const errorMessage = error.response?.data || 'No se pudo actualizar el usuario';
+      notifications.show({
+        title: 'Error',
+        message: errorMessage,
+        color: 'red'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,102 +127,86 @@ const EditarUsuario = () => {
             >
               Volver
             </Button>
-            <Text size="xl" weight={600}>Editar Usuario</Text>
+            <Text size="xl" weight={600}>
+              {id ? 'Editar Usuario' : 'Crear Usuario'}
+            </Text>
           </Group>
         </div>
 
-        <Paper shadow="sm" radius="md" className="form-section">
-          <Stack spacing="lg">
-            <div>
-              <Text size="lg" weight={600} mb="md">Información del Usuario</Text>
-              <Stack spacing="md">
-                <TextInput
-                  label="Nombres"
-                  value={formData.nombres}
-                  readOnly
-                />
-                <TextInput
-                  label="Apellidos"
-                  value={formData.apellidos}
-                  readOnly
-                />
-                <TextInput
-                  label="Correo Electrónico"
-                  value={formData.correo}
-                  readOnly
-                />
-              </Stack>
-            </div>
-
-            <div>
-              <Text size="lg" weight={600} mb="md">Rol Asignado</Text>
+        <Paper shadow="sm" radius="md" p="xl">
+          <form onSubmit={handleSubmit}>
+            <Stack spacing="md">
+              <TextInput
+                label="Nombre de Usuario"
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                required
+              />
+              <TextInput
+                label="Nombre"
+                value={formData.nombre}
+                onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                required
+              />
+              <TextInput
+                label="Apellidos"
+                value={formData.apellidos}
+                onChange={(e) => setFormData({...formData, apellidos: e.target.value})}
+              />
               <Select
+                label="Rol"
                 value={formData.rol}
                 onChange={(value) => setFormData({...formData, rol: value})}
                 data={[
-                  { value: 'inspector', label: 'Inspector' },
-                  { value: 'administrador', label: 'Administrador' }
+                  { value: 'Admin', label: 'Administrador' },
+                  { value: 'Empleado', label: 'Empleado' }
                 ]}
+                required
               />
-            </div>
-
-            <div>
-              <Text size="lg" weight={600} mb="md">Permisos Asignados</Text>
-              <Stack spacing="xs">
-                <Checkbox
-                  label="Asignar Inspecciones"
-                  checked={formData.permisos.asignarInspecciones}
-                  onChange={() => handlePermisosChange('asignarInspecciones')}
-                />
-                <Checkbox
-                  label="Gestionar Usuarios"
-                  checked={formData.permisos.gestionarUsuarios}
-                  onChange={() => handlePermisosChange('gestionarUsuarios')}
-                />
-                <Checkbox
-                  label="Gestionar Sanciones"
-                  checked={formData.permisos.gestionarSanciones}
-                  onChange={() => handlePermisosChange('gestionarSanciones')}
-                />
-                <Checkbox
-                  label="Gestionar Solicitudes"
-                  checked={formData.permisos.gestionarSolicitudes}
-                  onChange={() => handlePermisosChange('gestionarSolicitudes')}
-                />
-              </Stack>
-            </div>
-
-            <Group position="right" mt="xl" spacing="sm">
-              <Button
-                variant="outline"
-                color="gray"
-                onClick={() => navigate('/usuarios')}
-              >
-                Cancelar
-              </Button>
-              <Button
+              <TextInput
+                label="Correo Electrónico"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+              />
+              <TextInput
+                label="Teléfono"
+                value={formData.telefono}
+                onChange={(e) => setFormData({...formData, telefono: e.target.value})}
+              />
+              <TextInput
+                label="Dirección"
+                value={formData.direccion}
+                onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+              />
+              <DateInput
+                label="Fecha de Nacimiento"
+                placeholder="Seleccione una fecha"
+                value={formData.fechaNacimiento}
+                onChange={(value) => setFormData({...formData, fechaNacimiento: value})}
+                clearable
+              />
+              <DateInput
+                label="Fecha de Ingreso"
+                placeholder="Seleccione una fecha"
+                value={formData.fechaIngreso}
+                onChange={(value) => setFormData({...formData, fechaIngreso: value})}
+                clearable
+              />
+              <Button 
+                type="submit" 
+                loading={loading}
                 color="red"
-                onClick={handleSubmit}
               >
-                Guardar
+                {id ? 'Actualizar Usuario' : 'Crear Usuario'}
               </Button>
-              <Button
-                variant="filled"
-                color="red"
-                onClick={() => {
-                  // Aquí iría la lógica para eliminar el usuario
-                  console.log('Eliminar usuario:', id);
-                  navigate('/usuarios');
-                }}
-              >
-                Eliminar Usuario
-              </Button>
-            </Group>
-          </Stack>
+            </Stack>
+          </form>
         </Paper>
       </div>
     </div>
   );
 };
 
-export default EditarUsuario; 
+export default EditarUsuario;

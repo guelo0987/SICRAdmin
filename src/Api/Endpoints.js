@@ -76,6 +76,7 @@ export const SANCION_ENDPOINTS = {
     APLICAR_SANCION: `${API_URL}/api/Sancione/AplicarSancioneIrregularidad`,
     CAMBIAR_ESTADO: (idIrregularidad, idSancion) => 
         `${API_URL}/api/Sancione/CambiarEstado/${idIrregularidad}/${idSancion}`,
+    CREAR: `${API_URL}/api/Sancione/Crear`,
 };
 
 // Endpoints de Animales y Lotes

@@ -6,33 +6,70 @@ import {
   Text, 
   Group,
   Stack,
-  TextInput,
+  NumberInput,
   Select,
-  Textarea,
-  NumberInput
 } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { IconChevronLeft } from '@tabler/icons-react';
+import axios from 'axios';
+import { notifications } from '@mantine/notifications';
+import { SANCION_ENDPOINTS } from '../Api/Endpoints';
 import Header from '../Componentes/Header';
 import Menu from '../Componentes/Menu';
 import '../Estilos/AgregarSancion.css';
 
 const AgregarSancion = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    establecimiento: '',
-    codigo: '',
-    fecha: '',
-    inspector: '',
-    irregularidad: '',
-    tipoSancion: '',
-    monto: '',
+    idIrregularidad: '',
+    idSancion: '',
+    fechaAplicada: new Date(),
+    fechaResolution: new Date(),
+    estadoSancion: 'Pendiente'
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí iría la lógica para guardar la sanción
-    console.log('Datos de la sanción:', formData);
-    navigate('/sanciones');
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const dataToSend = {
+        idIrregularidad: parseInt(formData.idIrregularidad),
+        idSancion: parseInt(formData.idSancion),
+        fechaAplicada: formData.fechaAplicada.toISOString(),
+        fechaResolution: formData.fechaResolution.toISOString(),
+        estadoSancion: formData.estadoSancion
+      };
+
+      await axios.post(
+        SANCION_ENDPOINTS.APLICAR_SANCION,
+        dataToSend,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      notifications.show({
+        title: 'Éxito',
+        message: 'Sanción aplicada correctamente a la irregularidad',
+        color: 'green'
+      });
+      navigate('/sanciones');
+    } catch (error) {
+      console.error('Error al aplicar sanción:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'No se pudo aplicar la sanción a la irregularidad',
+        color: 'red'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,84 +87,58 @@ const AgregarSancion = () => {
             >
               Volver
             </Button>
-            <Text size="xl" weight={600}>Agregar Sanción</Text>
+            <Text size="xl" weight={600}>Aplicar Sanción a Irregularidad</Text>
           </Group>
         </div>
 
         <Paper shadow="sm" radius="md" className="form-section">
           <form onSubmit={handleSubmit}>
             <Stack spacing="lg">
-              <div>
-                <Text size="lg" weight={600} mb="md">Información del Establecimiento</Text>
-                <Stack spacing="md">
-                  <TextInput
-                    label="Establecimiento"
-                    placeholder="Ingrese el nombre del establecimiento"
-                    required
-                    value={formData.establecimiento}
-                    onChange={(e) => setFormData({...formData, establecimiento: e.target.value})}
-                  />
-                  <TextInput
-                    label="Código de Establecimiento"
-                    placeholder="Ingrese el código"
-                    required
-                    value={formData.codigo}
-                    onChange={(e) => setFormData({...formData, codigo: e.target.value})}
-                  />
-                  <TextInput
-                    label="Fecha de Inspección"
-                    type="date"
-                    required
-                    value={formData.fecha}
-                    onChange={(e) => setFormData({...formData, fecha: e.target.value})}
-                  />
-                  <TextInput
-                    label="Inspector"
-                    placeholder="Nombre del inspector"
-                    required
-                    value={formData.inspector}
-                    onChange={(e) => setFormData({...formData, inspector: e.target.value})}
-                  />
-                </Stack>
-              </div>
+              <NumberInput
+                label="ID Irregularidad"
+                placeholder="Ingrese el ID de la irregularidad"
+                required
+                value={formData.idIrregularidad}
+                onChange={(value) => setFormData({...formData, idIrregularidad: value})}
+                min={1}
+              />
+              
+              <NumberInput
+                label="ID Sanción"
+                placeholder="Ingrese el ID de la sanción"
+                required
+                value={formData.idSancion}
+                onChange={(value) => setFormData({...formData, idSancion: value})}
+                min={1}
+              />
 
-              <div>
-                <Text size="lg" weight={600} mb="md">Irregularidad Detectada</Text>
-                <Textarea
-                  placeholder="Describa la irregularidad"
-                  minRows={3}
-                  required
-                  value={formData.irregularidad}
-                  onChange={(e) => setFormData({...formData, irregularidad: e.target.value})}
-                />
-              </div>
+              <DateInput
+                label="Fecha de Aplicación"
+                placeholder="Seleccione la fecha"
+                value={formData.fechaAplicada}
+                onChange={(value) => setFormData({...formData, fechaAplicada: value})}
+                required
+              />
 
-              <div>
-                <Text size="lg" weight={600} mb="md">Detalles de la Sanción</Text>
-                <Stack spacing="md">
-                  <Select
-                    label="Tipo de Sanción"
-                    placeholder="Seleccione el tipo de sanción"
-                    data={[
-                      { value: 'multa', label: 'Multa económica' },
-                      { value: 'suspension', label: 'Suspensión temporal' },
-                      { value: 'cierre', label: 'Cierre definitivo' }
-                    ]}
-                    required
-                    value={formData.tipoSancion}
-                    onChange={(value) => setFormData({...formData, tipoSancion: value})}
-                  />
-                  <NumberInput
-                    label="Monto"
-                    placeholder="Ingrese el monto"
-                    required
-                    value={formData.monto}
-                    onChange={(value) => setFormData({...formData, monto: value})}
-                    prefix="$"
-                    min={0}
-                  />
-                </Stack>
-              </div>
+              <DateInput
+                label="Fecha de Resolución"
+                placeholder="Seleccione la fecha"
+                value={formData.fechaResolution}
+                onChange={(value) => setFormData({...formData, fechaResolution: value})}
+                required
+              />
+
+              <Select
+                label="Estado de la Sanción"
+                placeholder="Seleccione el estado"
+                data={[
+                  { value: 'Pendiente', label: 'Pendiente' },
+                  { value: 'Resuelto', label: 'Resuelto' }
+                ]}
+                required
+                value={formData.estadoSancion}
+                onChange={(value) => setFormData({...formData, estadoSancion: value})}
+              />
 
               <Group position="right" mt="xl">
                 <Button
@@ -140,8 +151,9 @@ const AgregarSancion = () => {
                 <Button
                   type="submit"
                   color="red"
+                  loading={loading}
                 >
-                  Guardar Sanción
+                  Aplicar Sanción
                 </Button>
               </Group>
             </Stack>

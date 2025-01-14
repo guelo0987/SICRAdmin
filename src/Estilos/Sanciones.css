@@ -3,15 +3,35 @@
   background-color: #f8f9fa;
 }
 
+.sanciones-content {
+  padding: 20px;
+  margin-left: 20px;
+  max-width: 1200px;
+}
+
 .sanciones-header {
-  margin-left: 280px;
-  margin-top: 80px;
-  padding: 0 40px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+/* Estilos para el contenedor de búsqueda */
+.search-container {
+  width: 100%;
+  max-width: 1200px;
+  margin-bottom: 20px;
 }
 
 /* Estilos para la tabla */
-.sanciones .data-table {
-  margin-top: 20px;
+.data-table-container {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Asegúrate de que los botones sean visibles */
+.sanciones-header button {
+  z-index: 1;
 }
 
 /* Estilos para los badges y columnas */
@@ -40,8 +60,8 @@
 
 @media (max-width: 768px) {
   .sanciones-content {
-    margin-left: 0;
-    padding: 16px;
+    margin-left: 10px;
+    padding: 10px;
   }
 }
 

@@ -92,24 +92,33 @@ const Sanciones = () => {
     <div className="sanciones">
       <Header />
       <Menu />
-      <div className="sanciones-header">
-        <Button
-          color="red"
-          leftIcon={<IconPlus size={16} />}
-          onClick={() => navigate('/sanciones/agregar')}
-        >
-          Agregar Sanción
-        </Button>
+      <div className="sanciones-content">
+        <div className="sanciones-header">
+          <Button
+            color="red"
+            leftIcon={<IconPlus size={16} />}
+            onClick={() => navigate('/sanciones/agregar')}
+          >
+            Agregar Sanción a irregularidad
+          </Button>
+          <Button
+            color="red"
+            leftIcon={<IconPlus size={16} />}
+            onClick={() => navigate('/sanciones/nueva')}
+          >
+            Crear Nueva Sanción
+          </Button>
+        </div>
+        <SearchBar 
+          placeholder="Buscar por código, descripción o monto"
+          onSearch={handleSearch}
+        />
+        <DataTable 
+          title="Sanciones"
+          columns={columns}
+          data={filteredData}
+        />
       </div>
-      <SearchBar 
-        placeholder="Buscar por código, descripción o monto"
-        onSearch={handleSearch}
-      />
-      <DataTable 
-        title="Sanciones"
-        columns={columns}
-        data={filteredData}
-      />
     </div>
   );
 };

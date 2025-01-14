@@ -27,6 +27,7 @@ import InspeccionesPendientes from './Pages/InspeccionesPendientes';
 import InspeccionCreada from './Pages/InspeccionCreada';
 import Login from './Pages/Login';
 import MiPerfil from './Pages/MiPerfil';
+import CrearSancion from './Pages/CrearSancion';
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
               <Route path="/sanciones" element={<Sanciones />} />
               <Route path="/sanciones/:id" element={<DetallesSanciones />} />
               <Route path="/sanciones/agregar" element={<AgregarSancion />} />
+              <Route path="/sanciones/nueva" element={<CrearSancion />} />
               <Route path="/usuarios" element={<Usuarios />} />
               <Route path="/usuarios/:id" element={<DetallesUsuario />} />
               <Route path="/usuarios/editar/:id" element={<EditarUsuario />} />
